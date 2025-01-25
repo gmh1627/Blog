@@ -1,0 +1,75 @@
+- class_name: 个人博客
+  class_desc: 当今搭建个人网站写博客已是小众爱好，但在网上仍能找到不少优秀的博客，但限于精力，不可能一一阅读，在此仅列出一些自己常阅读的/著名的/仍在更新的网站。此外，目前暂不收录个人学术主页或内容较少的个人网站。
+  link_list:
+    - name: 阮一峰
+      link: https://www.ruanyifeng.com
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 阮一峰的个人网站
+    - name: 虹线
+      link: https://1q43.blog/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 王健飞博客
+    - name: 最小可读
+      link: https://mvread.blog/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 汐笺的博客
+    - name: Bojie Li
+      link: https://01.me/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 科大少年班学长、原华为“天才少年”李博杰的博客
+    - name: 自由庄园
+      link: https://ramsayleung.github.io/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 程序员Ramsay Leung的博客
+    - name: 最好金龟换酒
+      link: https://fz0512.net/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 傅真的博客
+    - name: Jenny42's Life
+      link: http://jenny42.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 科大学姐、“评课社区”创始人张静宁的博客
+    - name: 火箭升空之时
+      link: https://zhang-ming-rui.gitbook.io/when-rocket-goes-up/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 清华学长张明瑞的博客
+    - name: Paul Graham
+      link: https://paulgraham.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 硅谷创业教父的文章，从LlamaIndex上获知
+    - name: 酷壳
+      link: https://coolshell.cn/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 陈皓的博客
+    - name: 胡涂说
+      link: https://hutusi.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 暂不知真名的程序员/博主
+    - name: 土木坛子
+      link: https://tumutanzi.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 暂不知真名的博主
+
+- class_name: 博客搜索/推荐
+  class_desc: 
+  link_list:
+    - name: 中文独立博客列表
+      link: https://github.com/timqian/chinese-independent-blogs
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: GitHub中文独立博客列表
+    - name: Blog Finder
+      link: https://bf.zzxworld.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 一个博客收集网站，暂不支持搜索功能
+    - name: 土木坛子的友链
+      link: https://tumutanzi.com/links
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 土木坛子的博客推荐
+    - name: 好 · 博客清单
+      link: https://github.com/cnfeat/list-of-good-things/blob/master/GoodBlogList.md
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 一个GitHub项目，收集了很多优秀的博客
+    - name: Feedly
+      link: https://feedly.com/
+      avatar: https://s3.bmp.ovh/imgs/2025/01/13/249dffad25554238.png
+      descr: 一个RSS阅读器，可以订阅博客、新闻等

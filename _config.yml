@@ -14,11 +14,17 @@ timezone: ''
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
 url: http://kangaroogao.com
-permalink: :year/:month/:day/:title/
-permalink_defaults:
-pretty_urls:
-  trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
-  trailing_html: true # Set to false to remove trailing '.html' from permalinks
+# permalink: :year/:month/:day/:title/
+# permalink_defaults:
+# pretty_urls:
+#  trailing_index: true # Set to false to remove trailing 'index.html' from permalinks
+#  trailing_html: true # Set to false to remove trailing '.html' from permalinks
+permalink: posts/:abbrlink/
+
+# 增加abbrlink配置
+abbrlink:
+    alg: crc16   #算法： support crc16(default) and crc32
+    rep: hex     #进制： support dec(default) and hex
 
 # Directory
 source_dir: source
@@ -120,7 +126,7 @@ sitemap:
 
 search:
   path: search.xml
-  field: post
+  field: all
   content: true
 
 reference:

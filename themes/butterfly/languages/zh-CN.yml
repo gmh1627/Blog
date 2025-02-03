@@ -59,7 +59,7 @@ aside:
   card_categories: 分类
   card_tags: 标签
   card_archives: 归档
-  card_recent_post: 最新文章
+  card_recent_post: 最近更新
   card_webinfo:
     headline: 网站信息
     article_name: 文章数目

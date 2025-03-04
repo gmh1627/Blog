@@ -9,7 +9,7 @@ hexo.extend.filter.register('before_generate', () => {
     },
     menu: null,
     code_blocks: {
-      theme: 'darker',
+      theme: 'light',
       macStyle: false,
       height_limit: false,
       word_wrap: false,

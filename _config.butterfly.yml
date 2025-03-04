@@ -1103,7 +1103,7 @@ CDN:
     # snackbar_css:
     # translate:
     # twikoo:
-    typed: https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js
+    # typed: 
     # utils:
     # valine:
     # waline_css:

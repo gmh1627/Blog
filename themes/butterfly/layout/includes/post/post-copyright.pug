@@ -1,6 +1,6 @@
 if theme.post_copyright.enable && page.copyright !== false
   - const author = page.copyright_author || config.author
-  - const authorHref = page.copyright_author_href || theme.post_copyright.author_href || config.url
+  - const authorHref = page.copyright_author_href || theme.post_copyright.author_href || site.url
   - const url = page.copyright_url || page.permalink
   - const info = page.copyright_info || _p('post.copyright.copyright_content', theme.post_copyright.license_url, theme.post_copyright.license, config.url, config.title)
   .post-copyright

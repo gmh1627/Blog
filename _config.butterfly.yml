@@ -151,7 +151,7 @@ index_top_img_height:
 
 # The subtitle on homepage
 subtitle:
-  enable: false
+  enable: true
   # Typewriter Effect
   effect: true
   # Customize typed.js
@@ -164,7 +164,7 @@ subtitle:
   # 1 - hitokoto.cn
   # 2 - yijuzhan.com
   # 3 - jinrishici.com
-  source: false
+  source: 3
   # If you close the typewriter effect, the subtitle will only show the first line of sub
   sub:
 
@@ -1103,12 +1103,10 @@ CDN:
     # snackbar_css:
     # translate:
     # twikoo:
-    # typed:
+    typed: https://unpkg.com/typed.js@2.1.0/dist/typed.umd.js
     # utils:
     # valine:
     # waline_css:
     # waline_js:
 
-#customize_layout:
-  #- movies
 rss: /atom.xml

@@ -17,10 +17,13 @@ nav:
   fixed: false
 
 menu:
-  # Home: / || fas fa-home
-  # List||fas fa-list:
-  #   Music: /music/ || fas fa-music
-  #   Movie: /movies/ || fas fa-video
+  Home: / || fas fa-home
+  About: /about/ || fas fa-user
+  Movies: /movies/ || fas fa-video
+  Digests: /digests/ || fas fa-book
+  Links: /links/ || fas fa-link
+  Archives: /archives/ || fas fa-archive
+  RSS: /atom.xml || fas fa-rss
 
 # --------------------------------------
 # Code Blocks Settings
@@ -28,7 +31,7 @@ menu:
 
 code_blocks:
   # Code block theme: darker / pale night / light / ocean / false
-  theme: light
+  theme: darker
   macStyle: false
   # Code block height limit (unit: px)
   height_limit: false
@@ -45,9 +48,10 @@ code_blocks:
 # Formal:
 #   icon: link || the description || color
 social:
-  # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
-  # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
-
+  fab fa-github: https://github.com/gmh1627 || Github || '#d3d3d3'
+  fas fa-envelope: mailto:gmh1627@mail.ustc.edu.cn || Email || '#4a7dbe'
+  fab fa-zhihu: https://www.zhihu.com/people/95-9-17-28-56 || Zhihu || '#0084ff'
+  fab fa-google-scholar: https://gmh1627.github.io/ 
 # --------------------------------------
 # Image Settings
 # --------------------------------------
@@ -55,14 +59,14 @@ social:
 favicon: /img/favicon.png
 
 avatar:
-  img: /img/butterfly-icon.png
+  img: /img/avatar2.png
   effect: false
 
 # Disable all banner images
 disable_top_img: false
 
 # If the banner of page not setting, it will show the default_top_img
-default_top_img:
+default_top_img: https://s3.bmp.ovh/imgs/2024/11/15/34c7c6daaeeaf471.jpg
 
 # The banner image of index page
 index_img:
@@ -121,7 +125,7 @@ post_meta:
     # Choose: date / relative
     date_format: date
     categories: true
-    tags: false
+    tags: true
     label: true
   post:
     # Choose: left / center
@@ -158,9 +162,9 @@ subtitle:
   # Choose: false/1/2/3
   # false - disable the function
   # 1 - hitokoto.cn
-  # 2 - https://api.aa1.cn/doc/yiyan.html
+  # 2 - yijuzhan.com
   # 3 - jinrishici.com
-  source: false
+  source: 3
   # If you close the typewriter effect, the subtitle will only show the first line of sub
   sub:
 
@@ -180,7 +184,7 @@ index_layout: 3
 # 3: auto_excerpt (default)
 # false: do not show the article introduction
 index_post_content:
-  method: 3
+  method: false
   # If you set method to 2 or 3, the length need to config
   length: 500
 
@@ -236,7 +240,7 @@ related_post:
 # 1: The 'next post' will link to old post
 # 2: The 'next post' will link to new post
 # false: disable pagination
-post_pagination: 1
+post_pagination: 2
 
 # Displays outdated notice for a post
 noticeOutdate:
@@ -256,8 +260,8 @@ noticeOutdate:
 footer:
   owner:
     enable: true
-    since: 2019
-  custom_text:
+    since: 2024
+  custom_text: <a href="https://beian.miit.gov.cn/#/Integrated/index"><span>粤ICP备2025360841号</span></a><a href="https://beian.mps.gov.cn/#/query/webSearch"><img class="icp-icon" src="/img/ICP.png"><span>粤公网安备44080202000199号</span></a>
   # Copyright of theme and framework
   copyright: true
 
@@ -281,19 +285,19 @@ aside:
     enable: true
     description:
     button:
-      enable: true
+      enable: false
       icon: fab fa-github
       text: Follow Me
       link: https://github.com/xxxxxx
   card_announcement:
-    enable: true
+    enable: false
     content: This is my Blog
   card_recent_post:
     enable: true
     # If set 0 will show all
     limit: 5
     # Sort: date / updated
-    sort: date
+    sort: updated
     sort_order:
   card_newest_comments:
     enable: false
@@ -320,7 +324,7 @@ aside:
     order: 1
     sort_order:
   card_archives:
-    enable: true
+    enable: false
     # Type: monthly / yearly
     type: monthly
     # Eg: YYYY年MM月
@@ -360,7 +364,7 @@ translate:
   enable: false
   # The text of a button
   default: 繁
-  # the language of website (1 - Traditional Chinese/ 2 - Simplified Chinese）
+  # the language of website (1 - Traditional Chinese/ 2 - Simplified Chinese)
   defaultEncoding: 2
   # Time delay
   translateDelay: 0
@@ -420,7 +424,7 @@ copy:
 
 # Need to install the hexo-wordcount plugin
 wordcount:
-  enable: false
+  enable: true
   # Display the word count of the article in post meta
   post_wordcount: true
   # Display the time to read the article in post meta
@@ -444,7 +448,7 @@ busuanzi:
 math:
   # Choose: mathjax, katex
   # Leave it empty if you don't need math
-  use:
+  use: mathjax
   per_page: true
   hide_scrollbar: false
 
@@ -465,8 +469,8 @@ math:
 search:
   # Choose: algolia_search / local_search / docsearch
   # leave it empty if you don't need search
-  use:
-  placeholder:
+  use: local_search
+  placeholder: Search...
 
   # Algolia Search
   algolia_search:
@@ -478,7 +482,7 @@ search:
     # Preload the search data when the page loads.
     preload: false
     # Show top n results per article, show all results by setting to -1
-    top_n_per_article: 1
+    top_n_per_article: -1
     # Unescape html strings to the readable one.
     unescape: false
     CDN:
@@ -1104,3 +1108,7 @@ CDN:
     # valine:
     # waline_css:
     # waline_js:
+
+#customize_layout:
+  #- movies
+rss: /atom.xml

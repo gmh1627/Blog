@@ -410,7 +410,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return false
     }
 
-    // 如果文檔高度小於視窗高度,直接返回
+    // 如果文檔高度小於視窗高度, 直接返回
     if (checkDocumentHeight()) return
 
     // find the scroll direction

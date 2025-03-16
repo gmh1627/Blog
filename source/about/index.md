@@ -8,4 +8,4 @@ I am currently a junior student at the University of Science and Technology of C
 
 In my free time, I enjoy [reading](../tags/%E9%98%85%E8%AF%BB/), exercising (long-distance running and table tennis), [traveling](../tags/%E8%A1%8C%E8%B5%B0%E8%B6%B3%E8%BF%B9/), listening to music and participating in various [cultural activities](../posts/cbba/) such as watching [movies](../movies/) and listening to stand-up comedy.
 
-Feel free to reach out to me via email at gmh1627@mail.ustc.edu.cn, or connect with me on [GitHub](https://github.com/gmh1627), [Zhihu](https://www.zhihu.com/people/95-9-17-28-56) and [CSDN](https://blog.csdn.net/weixin_73004416?type=blog). I look forward to engaging with you!
+Feel free to reach out to me via email at gmh1627@mail.ustc.edu.cn; g69023740@gmail.com, or connect with me on [GitHub](https://github.com/gmh1627), [Zhihu](https://www.zhihu.com/people/95-9-17-28-56) and [CSDN](https://blog.csdn.net/weixin_73004416?type=blog). I look forward to engaging with you!

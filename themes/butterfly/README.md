@@ -8,15 +8,15 @@
 
 # hexo-theme-butterfly
 
-![master version](https://img.shields.io/github/package-json/v/jerryc127/hexo-theme-butterfly/master?color=%231ab1ad&label=master)
+![master version](https://img.shields.io/github/package-json/v/jerryc127/hexo-theme-butterfly/master?color=%al=master)
 ![master version](https://img.shields.io/github/package-json/v/jerryc127/hexo-theme-butterfly/dev?label=dev)
-![https://img.shields.io/npm/v/hexo-theme-butterfly?color=%09%23bf00ff](https://img.shields.io/npm/v/hexo-theme-butterfly?color=%09%23bf00ff)
-![hexo version](https://img.shields.io/badge/hexo-5.3.0+-0e83c)
+![https://img.shields.io/npm/v/hexo-theme-butterfly?color=%09%(ps://img.shields.io/npm/v/hexo-theme-butterfly?color=%09%ff)
+![hexo version](https://img.shields.io/badge/hexo-5.3.0+-
 ![license](https://img.shields.io/github/license/jerryc127/hexo-theme-butterfly?color=FF5531)
 
 📢 Demo: [Butterfly](https://butterfly.js.org/) / [CrazyWong](https://blog.crazywong.com/)
 
-📖 Docs: [English](https://butterfly.js.org/en/posts/butterfly-docs-en-get-started/) / [Chinese](https://butterfly.js.org/posts/21cfbf15/)
+📖 Docs: [English](https://butterfly.js.org/en/posts/butterfly-docs-en-get-started/) / [Chinese](https://butterfly.js.org/posts/15/)
 
 ![](https://cdn.jsdelivr.net/gh/jerryc127/CDN@m2/img/theme-butterfly-readme.png)
 

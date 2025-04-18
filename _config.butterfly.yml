@@ -18,7 +18,7 @@ nav:
 
 menu:
   Home: / || fas fa-home
-  About: /about/ || fas fa-user
+  #About: /about/ || fas fa-user
   Movies: /movies/ || fas fa-video
   Digests: /digests/ || fas fa-book
   Links: /links/ || fas fa-link

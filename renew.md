@@ -213,3 +213,6 @@
   1. 上海行程、火车里程
   2. 旅人看的不是风景放开头
   3. 摩登时代
+   
+- 5.28
+  1. 补充FeedMe、Getting Started with Deep Learning with PyTorch and Hugging Face、数学建模agent

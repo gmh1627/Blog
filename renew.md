@@ -216,3 +216,10 @@
    
 - 5.28
   1. 补充FeedMe、Getting Started with Deep Learning with PyTorch and Hugging Face、数学建模agent
+
+- 5.30
+  1. 补充B站脱口秀、食神
+
+- 5.31
+  1. 补新龙门客栈、小城二月蓝白红三部曲
+  2. 补坐在角落的人

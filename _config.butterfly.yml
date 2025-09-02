@@ -20,7 +20,7 @@ menu:
   Home: / || fas fa-home
   #About: /about/ || fas fa-user
   #Movies: /movies/ || fas fa-video
-  Digests: /digests/ || fas fa-book
+  Reading: /reading/ || fas fa-book
   Links: /links/ || fas fa-link
   Archives: /archives/ || fas fa-archive
   RSS: /atom.xml || fas fa-rss

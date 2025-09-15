@@ -9,6 +9,7 @@ title: Reading
    - [大二下](../posts/c6f0)
    - [大三上](../posts/e325)
    - [大三下](../posts/1f24)
+   - [大四上](../posts/7f58)
 
 - [阅读记录](../posts/b7c9)
 - [藏书](../posts/fcfb)

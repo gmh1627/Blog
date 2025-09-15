@@ -7,8 +7,8 @@ rcParams['axes.unicode_minus'] = False   # 解决负号显示问题
 
 # 数据
 years = ["大学前", "2022-2023", "2024", "2025"]
-new_cities = [19, 2, 21, 9]  # 新到的城市
-cumulative_cities = [19, 21, 42, 51]  # 累计去过的城市
+new_cities = [19, 2, 21, 11]  # 新到的城市
+cumulative_cities = [19, 21, 42, 53]  # 累计去过的城市
 
 # 创建图形并绘制新到的城市折线图
 plt.figure(figsize=(10, 6))

@@ -17,6 +17,7 @@
           include ./card_post_series.pug
         !=partial('includes/widget/card_recent_post', {}, {cache: true})
         !=partial('includes/widget/card_ad', {}, {cache: true})
+        !=partial('includes/widget/card_map', {}, {cache: true})
   else
     //- page
     !=partial('includes/widget/card_author', {}, {cache: true})
@@ -34,3 +35,4 @@
       !=partial('includes/widget/card_archives', {}, {cache: true})
       !=partial('includes/widget/card_webinfo', {}, {cache: true})
       !=partial('includes/widget/card_bottom_self', {}, {cache: true})
+      !=partial('includes/widget/card_map', {}, {cache: true})

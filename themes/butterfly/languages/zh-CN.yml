@@ -53,6 +53,7 @@ pagination:
 comment: 评论
 
 aside:
+  card_map: 访客地图
   articles: 文章
   tags: 标签
   categories: 分类

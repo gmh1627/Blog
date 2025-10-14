@@ -122,6 +122,17 @@ def write_to_markdown(all_articles, total_word_count, filename="游记字数统�
             percentage = round(count / len(all_articles) * 100, 1) if all_articles else 0
             f.write(f"- {label}： {count} 篇 ({percentage}%)\n")
 
+        # 写入按字数排序的文章列表
+        f.write(f"\n## 按字数排序\n\n")
+        f.write(f"| 序号 | 文章标题 | 字数 | 发表时间 | 更新时间 | 链接 |\n")
+        f.write(f"|------|----------|------|----------|----------|------|\n")
+        
+        # 按字数从少到多排序
+        sorted_by_word_count = sorted(all_articles, key=lambda x: x['word_count'])
+        for i, article in enumerate(sorted_by_word_count, 1):
+            title = article['title'].replace('|', '\\|')  # 转义管道符
+            f.write(f"| {i} | {title} | {article['word_count_text']} | {article['published_time']} | {article['updated_time']} | [查看文章]({article['url']}) |\n")
+            
 # 目标URL
 base_url = "https://kangaroogao.com/categories/%E6%B8%B8%E8%AE%B0/"
 

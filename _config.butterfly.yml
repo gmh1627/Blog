@@ -263,7 +263,9 @@ footer:
     since: 2024
   custom_text: <a href="https://beian.miit.gov.cn/#/Integrated/index"><span>粤ICP备2025360841号</span></a><a href="https://beian.mps.gov.cn/#/query/webSearch"><img class="icp-icon" src="/img/ICP.png"><span>粤公网安备44080202000199号</span></a>
   # Copyright of theme and framework
-  copyright: true
+  copyright:
+    enable: true
+    version: true
 
 # --------------------------------------
 # Aside Settings

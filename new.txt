@@ -2,6 +2,7 @@ img
 搜索->Search
 数据加载中->Searching...
 最新文章->最近更新
+配置文件复制
 访客地图 
 themes\butterfly\layout\includes\widget\card_map.pug 
 .card-widget.card-map

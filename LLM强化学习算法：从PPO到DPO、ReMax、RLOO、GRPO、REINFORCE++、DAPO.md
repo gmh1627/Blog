@@ -1,5 +1,5 @@
 ---
-title: LLM强化学习算法：从PPO到DPO、ReMax、RLOO、GRPO、REINFORCE++、DAPO
+title: LLM 强化学习算法：从 PPO 到 DPO、ReMax、RLOO、GRPO、REINFORCE++、DAPO
 tags: 行走足迹
 categories: 技术博客
 date: 2025-06-02 00:00:00

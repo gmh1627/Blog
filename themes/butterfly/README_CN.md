@@ -36,7 +36,7 @@
 git clone -b master https://github.com/jerryc127/hexo-theme-butterfly.git themes/butterfly
 ```
 
-如果想要安裝比較新的dev分支，可以
+如果想要安裝比較新的 dev 分支，可以
 
 ```powershell
 git clone -b dev https://github.com/jerryc127/hexo-theme-butterfly.git themes/butterfly
@@ -44,7 +44,7 @@ git clone -b dev https://github.com/jerryc127/hexo-theme-butterfly.git themes/bu
 
 ### npm 安裝
 
-> 此方法只支持Hexo 5.0.0以上版本
+> 此方法只支持 Hexo 5.0.0以上版本
 
 在博客根目錄裡
 
@@ -54,13 +54,13 @@ npm i hexo-theme-butterfly
 
 ## ⚙ 應用主題
 
-修改hexo配置文件`_config.yml`，把主題改為`Butterfly`
+修改 hexo 配置文件`_config.yml`，把主題改為`Butterfly`
 
 ```
 theme: butterfly
 ```
 
->如果你沒有pug以及stylus的渲染器，請下載安裝： npm install hexo-renderer-pug hexo-renderer-stylus --save
+>如果你沒有 pug 以及 stylus 的渲染器，請下載安裝： npm install hexo-renderer-pug hexo-renderer-stylus --save
 
 ## 🎉 特色
 
@@ -73,7 +73,7 @@ theme: butterfly
 - [x] Pjax
 - [x] 文章閲讀模式
 - [x] 簡體和繁體轉換
-- [X] 電腦和手機都可查看TOC目錄
+- [X] 電腦和手機都可查看 TOC 目錄
 - [X] 內置多種代碼配色（darker/pale night/light/ocean），可自定義代碼配色
 - [X] 代碼塊顯示代碼語言/關閉或展開代碼塊/代碼複製/代碼自動換行
 - [X] 可關閉文字複製/可開啟內容複製增加版權信息）
@@ -101,7 +101,7 @@ theme: butterfly
 - [x] Chart.js 圖表顯示
 - [x] 照片牆
 - [x] 圖片懶加載
-- [x] Instantpage/Snackbar彈窗/PWA......
+- [x] Instantpage/Snackbar 彈窗/PWA......
 
 ## ✨ 貢獻者
 

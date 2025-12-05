@@ -116,10 +116,11 @@ feed:
   path: atom.xml
   limit: 20
   hub:
-  content: 
-  content_limit: 140
+  content: true
+  content_limit: 500
   content_limit_delim: ' '
   order_by: -date
+  author: 三峡星河
 
 sitemap:
   path: sitemap.xml

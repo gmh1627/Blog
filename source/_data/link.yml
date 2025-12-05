@@ -25,6 +25,10 @@
       link: https://01.me/
       avatar: https://s3.bmp.ovh/imgs/2025/01/31/382e657ca8ffd8bb.png
       descr: 科大少年班学长、原华为“天才少年”李博杰的博客
+    - name: 崔话记
+      link: https://cuixiping.com/
+      avatar: https://cuixiping.com/logo-cat.svg
+      descr: 向着理想的方向，爬一会儿，躺一会儿
     - name: 自由庄园
       link: https://ramsayleung.github.io/
       avatar: https://s3.bmp.ovh/imgs/2025/01/31/382e657ca8ffd8bb.png
@@ -58,7 +62,7 @@
       avatar: https://s3.bmp.ovh/imgs/2025/01/31/382e657ca8ffd8bb.png
       descr: 暂不知真名的博主
 
-- class_name: 博客搜索/推荐
+- class_name: 博客搜索/推荐平台
   class_desc: 
   link_list:
     - name: 中文独立博客列表

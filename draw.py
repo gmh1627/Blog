@@ -6,9 +6,9 @@ rcParams['font.sans-serif'] = ['SimHei']  # 设置字体为黑体
 rcParams['axes.unicode_minus'] = False   # 解决负号显示问题
 
 # 数据
-years = ["大学前", "2022-2023", "2024", "2025"]
-new_cities = [19, 2, 21, 21]  # 新到的城市
-cumulative_cities = [19, 21, 42, 63]  # 累计去过的城市
+years = ["大学前", "2022-2023", "2024", "2025", "2026"]
+new_cities = [19, 2, 21, 21, 1]  # 新到的城市
+cumulative_cities = [19, 21, 42, 63, 64]  # 累计去过的城市
 
 # 创建图形并绘制新到的城市折线图
 plt.figure(figsize=(10, 6))

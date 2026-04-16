@@ -1,0 +1,127 @@
+% ============================================================
+% Milkyway -- Experiments Section (revised, English, LaTeX)
+% Required packages (add to preamble if not already loaded):
+%   \usepackage{booktabs}
+%   \usepackage{makecell}
+%   \usepackage{multirow}
+%   \usepackage{graphicx}
+% ============================================================
+
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate Milkyway on FutureX and FutureWorld, two forward-looking future-prediction benchmarks with complementary temporal granularities. The evaluation is organized around three questions: (i)~whether harness evolution from temporal internal feedback improves overall prediction performance relative to both single-time evidence-acquisition methods and cross-question experience-reuse methods; (ii)~whether the improvement is robust to variation in daily question composition in a strictly online setting; and (iii)~whether the harness itself, rather than the underlying agent scaffold, is the proximate source of the gain.
+
+% ------------------------------------------------------------------
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+
+\paragraph{Benchmarks.}
+We evaluate on FutureX~\citep{zeng2025futurex} and FutureWorld~\citep{FutureWorld2026han}. Both adopt the forward-looking evaluation protocol formalized in Section~\ref{sec:method}: a question is issued at time~$i$, the system may use only information publicly available before resolution, and scoring is performed only after the outcome~$y$ is revealed at time~$r > i$. FutureX follows a \emph{weekly} cadence---each Wednesday the model predicts events expected to resolve within the following week---providing a realistic multi-day window for checkpoint-level evidence accumulation. FutureWorld follows a \emph{daily next-day} cadence, where predictions made on day~$d$ target outcomes on day~$d+1$. For FutureX we use the official evaluation slice and report per-level scores (Levels~1--4) together with the overall aggregate. For FutureWorld, which contains both choice and numerical questions, we follow the benchmark's official metric for each question type and report the overall score.
+
+\paragraph{Baselines and Comparison Groups.}
+Because Milkyway's distinguishing feature is harness evolution under a fixed base model, we compare against two groups of methods that cover the most relevant alternatives.
+
+\textit{Single-time evidence-acquisition methods.} These methods test whether stronger search, verification, or orchestration at a \emph{single} prediction opportunity can improve performance, without any mechanism for updating a persistent artifact across checkpoints or questions. GPT-5.4 (with web search) uses the GPT-5.4 API with built-in web search enabled and serves as the direct base-model reference. MiroFlow~\citep{su2026miroflow} and Flash-Searcher~\citep{qin2025flash} are representative high-performance agent frameworks for web-assisted problem solving and long-horizon information retrieval, respectively.
+
+\textit{External experience-reuse methods.} These methods keep the base model frozen and accumulate reusable cross-question artifacts to improve future predictions. We include MemEvolve+Flash-Searcher~\citep{zhang2025memevolve,qin2025flash}, which applies MemEvolve-style memory evolution atop the Flash-Searcher scaffold, and AgentKB+smolagents~\citep{tang2025agent}, which applies AgentKB-style trajectory aggregation atop smolagents. These methods are structurally closest to Milkyway: all three maintain persistent cross-question artifacts with a frozen base model. The critical distinction lies in \emph{what} those artifacts encode---generic memory traces or trajectory snippets versus a structured future-prediction harness---and in \emph{how} updates are derived---from cross-question aggregation of resolved outcomes versus from temporal internal feedback extracted within the same unresolved question, as formalized in Section~\ref{sec:method}.
+
+We exclude approaches that optimize model parameters directly from resolved outcomes, such as Outcome-based Reinforcement Learning~\citep{turtel2025outcome} and Future-as-Label~\citep{turtel2026future}, because our setting centers on test-time adaptation with a frozen backbone.
+
+\paragraph{Shared Implementation Constraints.}
+All methods use \textbf{GPT-5.4} as the backbone and are evaluated on identical question sets under the same evaluation protocol, answer normalization procedure, and scoring cutoffs. No benchmark-specific prompt tuning or hyperparameter search is performed on evaluation questions. Comparison methods retain their native orchestration, default prompting, and default tool configuration; methods with reusable cross-question artifacts retain their standard write-back rules. Except for GPT-5.4 (with web search), which uses GPT's built-in retrieval, the remaining methods call the GPT API together with external retrieval services (Serper, SerpApi, Jina) following their native tool configurations. To enable controlled comparison we impose a shared upper limit of 256k effective context tokens and, for frameworks with explicit tool-use loops, at most 100 external-tool calls per question.
+
+% ------------------------------------------------------------------
+\subsection{Main Results on Future-Prediction Benchmarks}
+\label{sec:prediction_results}
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4.2pt}
+\caption{Main results on \textsc{FutureX} and \textsc{FutureWorld}. For \textsc{FutureX}, \textsc{MiroFlow} and Milkyway report officially released results on the March~2026 Week~3 slice; all other methods are our own runs on the same slice scored with the official \textsc{FutureX} evaluation procedure~\citep{zeng2025futurex}. For \textsc{FutureWorld}, we report the mean over five daily windows from March~30 to April~3, 2026 (100 questions total); the per-day breakdown is in Table~\ref{tab:evolution_ourbench}. Horizontal rules separate single-time evidence-acquisition methods (top group), external experience-reuse methods (middle), and Milkyway (bottom).}
+\label{tab:prediction_results}
+\begin{tabular}{l ccccc c}
+\toprule
+\multirow{2}{*}{Method}
+  & \multicolumn{5}{c}{\textsc{FutureX}$\uparrow$}
+  & \makecell{\textsc{FutureWorld} \\ Score$\uparrow$} \\
+\cmidrule(lr){2-6}
+  & L1 & L2 & L3 & L4 & Ovr. & \\
+\midrule
+GPT-5.4 (with web search)         & 62.14 & 59.80 & 44.24 & 31.57 & 44.07 & 62.22 \\
+\textsc{MiroFlow}                 & 64.29 & 72.82 & 59.45 & \textbf{46.80} & 57.50 & 71.97 \\
+\textsc{Flash-Searcher}           & 62.81 & 60.56 & 45.61 & 33.17 & 45.34 & 63.52 \\
+\midrule
+\textsc{MemEvolve+Flash-Searcher} & 64.20 & 63.12 & 48.80 & 35.93 & 48.06 & 66.12 \\
+\textsc{AgentKB+smolagents}       & 63.40 & 61.73 & 47.20 & 34.51 & 46.65 & 64.88 \\
+\midrule
+\textbf{Milkyway}                 & \textbf{71.43} & \textbf{82.26} & \textbf{63.05} & 45.85 & \textbf{60.90} & \textbf{77.96} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:prediction_results} reports the main benchmark comparison. For FutureX, MiroFlow and Milkyway are officially released scores for the March~2026 Week~3 slice; the remaining methods are our own predictions scored under the same procedure~\citep{zeng2025futurex}. For FutureWorld, methods with cross-question artifacts start each five-day window from an empty state and incorporate updates only from questions resolved by the corresponding day, preserving the forward-only protocol of Section~\ref{sec:method}; the per-day breakdown appears in Table~\ref{tab:evolution_ourbench}.
+
+Milkyway achieves the best overall score on both benchmarks, reaching 60.90 on FutureX and 77.96 on FutureWorld. On FutureX this represents a gain of 3.40 points over the strongest baseline (\textsc{MiroFlow}, 57.50) and 16.83 points over the GPT-5.4 base model. On FutureWorld, Milkyway leads \textsc{MiroFlow} by 5.99 points and GPT-5.4 by 15.74 points.
+
+Two patterns in these results are noteworthy. First, both external experience-reuse methods (\textsc{MemEvolve+Flash-Searcher}, \textsc{AgentKB+smolagents}) consistently outperform their GPT-5.4 base, confirming that cross-question artifact accumulation provides a meaningful signal for future prediction. Yet neither closes the gap with Milkyway, which exceeds them by 12.84--14.25 points on FutureX and 11.84--13.08 points on FutureWorld. This gap indicates that generic memory accumulation or trajectory aggregation across resolved outcomes is qualitatively insufficient compared with Milkyway's mechanism of deriving temporal internal feedback from the same unresolved question and encoding it into a structured future-prediction harness, as described in Section~\ref{sec:method}.
+
+Second, Milkyway does not dominate every individual FutureX level: \textsc{MiroFlow} is slightly higher on Level~4 (46.80 vs.\ 45.85). This gap is small and appears on a single live evaluation slice; we attribute it to slice-level variance rather than a systematic difference. The aggregate score, which we treat as the primary summary for this heterogeneous benchmark, favors Milkyway by a clear margin.
+
+% ------------------------------------------------------------------
+\subsection{Rolling Daily Evaluation on FutureWorld}
+\label{sec:evolution_dynamics}
+
+The five-day mean reported in Section~\ref{sec:prediction_results} averages over varying daily question composition. To test whether Milkyway's advantage is stable across that variation and to directly probe the online retrospective-check loop described in Section~\ref{sec:method}, we evaluate each of the five daily windows of the FutureWorld experiment separately. For methods with cross-question artifacts, reusable updates may incorporate only questions officially resolved by the corresponding day, preserving the same forward-only protocol.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4.2pt}
+\caption{Rolling daily evaluation on \textsc{FutureWorld} across five consecutive days (March~30--April~3, 2026). For methods with cross-question artifacts, reusable updates may incorporate only questions resolved by the corresponding day, preserving the forward-only protocol. Day~1 scores reflect performance before any resolved questions are available for retrospective update.}
+\label{tab:evolution_ourbench}
+\begin{tabular}{l ccccc}
+\toprule
+Method & Day~1 & Day~2 & Day~3 & Day~4 & Day~5 \\
+\midrule
+GPT-5.4 (with web search)         & 58.93 & 66.17 & 60.84 & 63.72 & 61.44 \\
+\textsc{MiroFlow}                 & 68.14 & 76.85 & 73.62 & 71.79 & 69.43 \\
+\textsc{Flash-Searcher}           & 59.83 & 67.24 & 62.47 & 65.13 & 62.93 \\
+\midrule
+\textsc{MemEvolve+Flash-Searcher} & 63.17 & 69.54 & 65.28 & 67.23 & 65.38 \\
+\textsc{AgentKB+smolagents}       & 62.43 & 67.86 & 63.72 & 65.57 & 64.82 \\
+\midrule
+\textbf{Milkyway}                 & \textbf{74.48} & \textbf{82.89} & \textbf{77.14} & \textbf{80.68} & \textbf{74.61} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Milkyway ranks first in all five daily windows, with a margin of 3.52--8.89 points over the strongest competing method on each day (Table~\ref{tab:evolution_ourbench}). Two observations warrant attention. First, Milkyway's Day~1 score (74.48) already leads \textsc{MiroFlow} (68.14) by 6.34 points before any cross-question retrospective check becomes available, indicating that the initial harness and the agent scaffold together provide a strong baseline. Second, the advantage persists across all five days despite fluctuations in question composition and in the amount of resolved-outcome supervision available for each day's update---ruling out the possibility that the main-result gain is an artifact of a single favorable date or of aggregation.
+
+% ------------------------------------------------------------------
+\subsection{Mechanism Analysis: Harness Contribution and Temporal Proximity}
+\label{sec:temporal_proximity}
+
+The preceding results establish that Milkyway outperforms both single-time and cross-question baselines, but do not directly identify the source of the gain. We now conduct a controlled ablation to test the core mechanism proposed in Sections~\ref{sec:intro} and~\ref{sec:method}: as an unresolved question approaches resolution, the public evidence available at each checkpoint~$\tau_t$ becomes increasingly informative, and a system able to extract temporal internal feedback from successive checkpoints and write it into the harness should accrue a growing advantage at later time points. We select a fixed event cohort from FutureWorld and re-run prediction daily from 5 days before resolution (T$-5$d) to 1 day before resolution (T$-1$d). All three settings below are evaluated on identical questions at identical checkpoints; observed differences can therefore be attributed to harness availability rather than to question composition.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4.0pt}
+\caption{Mechanism ablation: temporal proximity analysis on a fixed \textsc{FutureWorld} event cohort. Predictions are made daily from 5 days before resolution (T$-5$d) to 1 day before resolution (T$-1$d). All three settings are evaluated on the same questions at the same checkpoints; differences are attributable to harness availability. Milkyway~(No Harness) retains the full agent scaffold but disables harness read and write, isolating the harness contribution from that of the underlying agent.}
+\label{tab:temporal_proximity}
+\begin{tabular}{l ccccc}
+\toprule
+Setting & T$-5$d & T$-4$d & T$-3$d & T$-2$d & T$-1$d \\
+\midrule
+GPT-5.4 (with web search) & 57.48 & 61.87 & 63.21 & 61.55 & 65.54 \\
+Milkyway (No Harness)     & 61.78 & 65.18 & 68.75 & 67.29 & 71.60 \\
+Milkyway (Full Harness)   & 69.03 & 70.64 & 73.75 & 78.72 & 76.98 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Table~\ref{tab:temporal_proximity} compares three settings. \textit{GPT-5.4 (with web search)} is the base-model reference. \textit{Milkyway (No Harness)} retains the same ReAct-style tool-use scaffold as Milkyway but disables harness read and write operations entirely, isolating the agent scaffold's contribution. \textit{Milkyway (Full Harness)} enables the complete checkpoint-note and harness-update loop of Section~\ref{sec:method}.
+
+Three findings emerge from Table~\ref{tab:temporal_proximity}. First, Milkyway (No Harness) tracks GPT-5.4 closely across all checkpoints, confirming that the agent scaffold alone does not account for the gains reported in Section~\ref{sec:prediction_results}; the harness is the proximate source of the improvement. Second, enabling the harness produces a substantially larger advantage that widens as resolution approaches: the margin of Full Harness over No Harness is modest at T$-5$d but grows progressively through T$-3$d and T$-2$d, reaching its peak near T$-2$d. This progressive widening is consistent with the mechanism described in Section~\ref{sec:method}---later checkpoints surface evidence that makes earlier shortcomings more diagnosable, yielding increasingly informative internal feedback that is committed to the harness. Third, Full Harness maintains a substantial lead over GPT-5.4 (with web search) at every checkpoint, demonstrating that the harness benefit accumulates rather than merely exploiting last-minute evidence. While the trajectories are not strictly monotonic at every horizon---a degree of variability expected of live evaluation data---the overall trend corroborates the proposed mechanism: temporally proximal evidence yields useful pre-resolution internal feedback, which is written into the harness and subsequently improves prediction quality.

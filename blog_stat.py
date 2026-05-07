@@ -7,7 +7,7 @@ from datetime import datetime
 from collections import defaultdict
 
 # 设为 True 可强制重新爬取读书笔记（即使文件已存在）
-FORCE_RESCRAPE_DUSHU = False
+FORCE_RESCRAPE_DUSHU = True
 
 
 def parse_local_date_from_time_tag(time_element, default_value):

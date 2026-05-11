@@ -2,7 +2,7 @@
 
 对应文章：`source\_posts\清明游记：枣庄、徐州、淮北.md`
 
-通用图层顺序、字体、路线样式按 `QGIS旅行铁路地图制图流程.md` 执行。本文只写本篇地图的范围、数据和过滤条件。
+本文写明本篇地图的范围、数据、SQL、样式和行程线，可按本文独立操作。
 
 本篇专用 GeoPackage 文件名：
 
@@ -45,6 +45,14 @@ datav_anhui_prefecture
 datav_zaozhuang_county
 datav_xuzhou_county
 datav_huaibei_county
+```
+
+省份底图颜色：
+
+```text
+山东：#F2DDE2
+江苏：#E8E0F2
+安徽：#E6F0D8
 ```
 
 ## 3. 高亮区域
@@ -112,7 +120,68 @@ GROUP BY "name"
 
 局部图中 `合肥南` 可以不显示，只在完整行程图中保留。
 
-## 5. 行程线
+## 5. 样式与图层顺序
+
+普通地级市底图：
+
+```text
+山东：#F2DDE2
+江苏：#E8E0F2
+安徽：#E6F0D8
+填充不透明度：100%
+边界：#333333
+线宽：0.26 mm
+```
+
+高亮区域：
+
+```text
+经过地级市：填充 #A8E6A1，不透明度 50%，边界 #2E7D4F，线宽 0.7-0.9 mm
+起点地级市：填充 #F4C95D，不透明度 65%，边界 #A65F00，线宽 0.8-1.0 mm
+终点地级市：填充 #D8B4F8，不透明度 65%，边界 #6D3F99，线宽 0.8-1.0 mm
+经过县区：填充 #5FBF72，不透明度 50%，边界 #4F7F55，线宽 0.15-0.25 mm
+省界：无填充，边界 #222222，线宽 0.8-1.0 mm
+边界层级：省界 > 起点/终点地级市 > 经过地级市 > 普通地级市 > 经过县区
+```
+
+标签：
+
+```text
+市名：华文新魏，13 pt，#333333，白色描边 0.8 mm
+县名：华文楷体，10 pt，#0E3D22，白色描边 0.5 mm
+车站名：宋体，9 pt，#111111，白色描边 0.6-0.8 mm
+```
+
+铁路与底图：
+
+```text
+普通铁路：#B8B8B8，不透明度 80-100%，线宽 0.2-0.3 mm
+行程线底层：黑色简单线，1.2 mm
+行程线上层：白色简单线，1.0 mm，自定义虚线，短横 2.0 mm，空格 4.5 mm，端点平端或方角
+汽车线：灰色虚线，0.5-0.7 mm
+车站点：粉色圆点 #E88AA5，描边 #7A2E42，大小 2.2-2.8 mm
+OpenStreetMap 底图：不透明度 35-55%
+```
+
+图层顺序从上到下：
+
+```text
+station_zaozhuang_xuzhou_huaibei
+各类 label 图层
+trip_route_zaozhuang_xuzhou_huaibei
+trip_bus_taierzhuang
+china_railwayosm__lines
+china_railwayosm__multilinestrings
+start_city
+end_city
+各省 visited 图层
+各县区重点图层
+province_boundary
+各省 datav_*_prefecture
+OpenStreetMap
+```
+
+## 6. 行程线
 
 铁路图层：
 
@@ -148,3 +217,39 @@ trip_bus_taierzhuang
 ```
 
 汽车段建议灰色虚线，不要使用铁轨样式。
+
+## 7. 导出图片
+
+局部主图先在主画布设置范围：
+
+```python
+from qgis.core import QgsRectangle
+
+rect = QgsRectangle(116.4, 33.3, 118.8, 35.4)
+iface.mapCanvas().setExtent(rect)
+iface.mapCanvas().refresh()
+```
+
+打印布局建议：
+
+```text
+布局名：layout_zaozhuang_xuzhou_huaibei
+页面尺寸：240 mm x 210 mm
+地图框：铺满页面
+导出文件：map_zaozhuang_xuzhou_huaibei.png
+格式：PNG
+DPI：300
+```
+
+操作：
+
+```text
+项目 -> 新建打印布局
+页面属性 -> 自定义页面大小：240 mm x 210 mm
+添加项目 -> 添加地图
+把地图框拉满页面
+选中地图框 -> 项目属性 -> 范围 -> 设置为地图画布范围
+布局 -> 导出为图像
+```
+
+若要画合肥出发和返程，需另建完整行程布局，并把 `Y 最小值` 放到约 `31.5`。如果边缘城市名被裁掉，把范围四周外扩 `0.1-0.3` 度。

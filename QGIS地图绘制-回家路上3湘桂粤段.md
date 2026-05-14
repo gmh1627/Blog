@@ -2,7 +2,7 @@
 
 对应文章：`source\_posts\回家路上3：永州、柳州、来宾、贵港、玉林.md`
 
-本图只画湖南、广西、广东部分，不画北京到武汉段。本文已写入本图所需的数据、SQL、样式和行程线，可按本文独立操作。
+本图只画湖南、广西、广东部分，不画北京到武汉段。
 
 本篇专用 GeoPackage 文件名：
 
@@ -32,11 +32,6 @@ Y 最大值：27.0
 广西地级市：https://geo.datav.aliyun.com/areas_v3/bound/450000_full.json
 广东地级市：https://geo.datav.aliyun.com/areas_v3/bound/440000_full.json
 永州县区：https://geo.datav.aliyun.com/areas_v3/bound/431100_full.json
-柳州县区：https://geo.datav.aliyun.com/areas_v3/bound/450200_full.json
-来宾县区：https://geo.datav.aliyun.com/areas_v3/bound/451300_full.json
-贵港县区：https://geo.datav.aliyun.com/areas_v3/bound/450800_full.json
-玉林县区：https://geo.datav.aliyun.com/areas_v3/bound/450900_full.json
-湛江县区：https://geo.datav.aliyun.com/areas_v3/bound/440800_full.json
 ```
 
 推荐图层名：

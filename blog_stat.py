@@ -278,7 +278,7 @@ def print_summary(label, all_articles, total_word_count):
 
 # ===== 1. 游记类别 =====
 youji_articles, youji_total = scrape_category(
-    "https://kangaroogao.com/categories/%E6%B8%B8%E8%AE%B0/",
+    "https://kangaroogao.com/tags/%E6%B8%B8%E8%AE%B0/",
     label="游记"
 )
 print_summary("游记", youji_articles, youji_total)
@@ -322,7 +322,7 @@ if not FORCE_RESCRAPE_DUSHU and os.path.exists(DUSHU_FILE):
     print(f"  如需重新统计，请将脚本顶部的 FORCE_RESCRAPE_DUSHU 设为 True。")
 else:
     dushu_articles, dushu_total = scrape_category(
-        "https://kangaroogao.com/categories/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/",
+        "https://kangaroogao.com/tags/%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/",
         label="读书笔记"
     )
     print_summary("读书笔记", dushu_articles, dushu_total)

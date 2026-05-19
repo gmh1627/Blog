@@ -45,7 +45,7 @@ URL：https://tile.openstreetmap.org/{z}/{x}/{y}.png
 DataV GeoJSON：
 
 ```text
-北京边界：https://geo.datav.aliyun.com/areas_v3/bound/110000.json
+北京轮廓：https://geo.datav.aliyun.com/areas_v3/bound/110000.json
 北京区县：https://geo.datav.aliyun.com/areas_v3/bound/110000_full.json
 河北地级市：https://geo.datav.aliyun.com/areas_v3/bound/130000_full.json
 山西地级市：https://geo.datav.aliyun.com/areas_v3/bound/140000_full.json
@@ -125,17 +125,6 @@ FROM "datav_yulin_county"
 WHERE "name" IN (
 '府谷县',
 '神木市'
-)
-```
-
-北京若想标出车站所在区，可选：
-
-```sql
-SELECT *
-FROM "datav_beijing_district"
-WHERE "name" IN (
-'丰台区',
-'西城区'
 )
 ```
 

@@ -10,6 +10,8 @@
 travel_map_home2_full.gpkg
 ```
 
+本篇 `.gpkg` 只保存铁路 OSM 图层、车站图层和自绘路线。DataV 行政区 GeoJSON 直接导入使用，不需要导出为 `.gpkg`。
+
 ## 1. 地图范围
 
 建议范围：
@@ -226,7 +228,20 @@ province_boundary
 OpenStreetMap
 ```
 
-## 6. 行程线
+## 6. 铁路与行程线
+
+把 `china_railway.osm.pbf` 拖入 QGIS，只把铁路相关子图层导出到本篇 `.gpkg`：
+
+```text
+china_railwayosm__lines
+china_railwayosm__multilinestrings
+```
+
+车站点按第 4 节查询后导出为：
+
+```text
+station_home2_full
+```
 
 新建线图层：
 
@@ -234,7 +249,36 @@ OpenStreetMap
 trip_route_home2_full
 ```
 
-绘制完整铁路路线：
+启用捕捉与追踪：
+
+```text
+视图 -> 工具栏 -> 捕捉工具栏
+工程 -> 捕捉选项...
+模式：高级配置
+china_railwayosm__lines：顶点和线段，8 像素
+china_railwayosm__multilinestrings：顶点和线段，8 像素
+其他图层：关闭捕捉
+trip_route_home2_full：先关闭捕捉
+```
+
+然后：
+
+```text
+选中 trip_route_home2_full
+点击铅笔进入编辑模式
+选择“添加线要素”或“线段数字化”
+在捕捉工具栏点击“启用追踪 / Trace Digitizing”
+```
+
+如果找不到追踪按钮：
+
+```text
+Ctrl + K
+搜索：追踪
+或搜索：Trace
+```
+
+追踪完整铁路路线：
 
 ```text
 合肥南 -> 泾县
@@ -248,6 +292,8 @@ trip_route_home2_full
 ```
 
 如果完整路线太长，建议导出一张完整竖幅图，再额外导出一张 `福州-赣州` 局部放大图。
+
+遇到铁路枢纽、并行铁路或追踪跳远时，把长段拆成短段，在转折点附近多点几次。
 
 ## 7. 导出图片
 

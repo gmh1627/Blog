@@ -8,6 +8,8 @@
 travel_map_shanxi_shaanxi.gpkg
 ```
 
+本篇 `.gpkg` 只保存铁路 OSM 图层、车站图层和自绘路线。DataV 行政区 GeoJSON 直接导入使用，不需要导出为 `.gpkg`。
+
 ## 1. 地图范围
 
 建议范围：
@@ -55,7 +57,7 @@ DataV GeoJSON：
 榆林县区：https://geo.datav.aliyun.com/areas_v3/bound/610800_full.json
 ```
 
-导出到 `travel_map_shanxi_shaanxi.gpkg`，推荐图层名：
+直接导入 QGIS 后，推荐图层名：
 
 ```text
 datav_beijing_city
@@ -239,7 +241,20 @@ OpenStreetMap
 
 `*_visited` 和县区高亮图层不要开启标签；标签统一放在复制出来的 `*_label` 图层。
 
-## 7. 行程线
+## 7. 铁路与行程线
+
+把 `china_railway.osm.pbf` 拖入 QGIS，只把铁路相关子图层导出到本篇 `.gpkg`：
+
+```text
+china_railwayosm__lines
+china_railwayosm__multilinestrings
+```
+
+车站点按第 5 节查询后导出为：
+
+```text
+station_shanxi_shaanxi
+```
 
 新建铁路行程线：
 
@@ -256,7 +271,36 @@ mode     文本
 note     文本
 ```
 
-建议铁路段：
+启用捕捉与追踪：
+
+```text
+视图 -> 工具栏 -> 捕捉工具栏
+工程 -> 捕捉选项...
+模式：高级配置
+china_railwayosm__lines：顶点和线段，8 像素
+china_railwayosm__multilinestrings：顶点和线段，8 像素
+其他图层：关闭捕捉
+trip_route_shanxi_shaanxi：先关闭捕捉
+```
+
+然后：
+
+```text
+选中 trip_route_shanxi_shaanxi
+点击铅笔进入编辑模式
+选择“添加线要素”或“线段数字化”
+在捕捉工具栏点击“启用追踪 / Trace Digitizing”
+```
+
+如果找不到追踪按钮：
+
+```text
+Ctrl + K
+搜索：追踪
+或搜索：Trace
+```
+
+建议追踪铁路段：
 
 ```text
 1 北京丰台 -> 太原
@@ -282,6 +326,8 @@ trip_bus_shanxi_shaanxi
 ```
 
 如果实际行程中 `保德县 -> 府谷`、`神木 -> 岢岚` 或 `大同 -> 大同南` 是汽车/大巴/市内交通，就画到 `trip_bus_shanxi_shaanxi`，不要使用黑白铁轨样式。
+
+遇到铁路枢纽、并行铁路或追踪跳远时，把长段拆成短段，在转折点附近多点几次。
 
 ## 8. 导出图片
 

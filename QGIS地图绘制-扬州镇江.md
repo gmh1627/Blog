@@ -8,7 +8,7 @@
 travel_map_yangzhou_zhenjiang.gpkg
 ```
 
-本文所有 DataV、OSM 导出的正式制图图层都保存到这个文件，不再使用通用的 `travel_map.gpkg`。
+本篇 `.gpkg` 只保存铁路 OSM 图层、车站图层和自绘路线。DataV 行政区 GeoJSON 直接导入使用，不需要导出为 `.gpkg`。
 
 ## 1. 地图范围
 
@@ -171,7 +171,20 @@ datav_anhui_prefecture / datav_jiangsu_prefecture
 OpenStreetMap
 ```
 
-## 6. 行程线
+## 6. 铁路与行程线
+
+把 `china_railway.osm.pbf` 拖入 QGIS，只把铁路相关子图层导出到本篇 `.gpkg`：
+
+```text
+china_railwayosm__lines
+china_railwayosm__multilinestrings
+```
+
+车站点按第 4 节查询后导出为：
+
+```text
+station_yangzhou_zhenjiang
+```
 
 铁路图层：
 
@@ -179,7 +192,36 @@ OpenStreetMap
 trip_route_yangzhou_zhenjiang
 ```
 
-绘制：
+启用捕捉与追踪：
+
+```text
+视图 -> 工具栏 -> 捕捉工具栏
+工程 -> 捕捉选项...
+模式：高级配置
+china_railwayosm__lines：顶点和线段，8 像素
+china_railwayosm__multilinestrings：顶点和线段，8 像素
+其他图层：关闭捕捉
+trip_route_yangzhou_zhenjiang：先关闭捕捉
+```
+
+然后：
+
+```text
+选中 trip_route_yangzhou_zhenjiang
+点击铅笔进入编辑模式
+选择“添加线要素”或“线段数字化”
+在捕捉工具栏点击“启用追踪 / Trace Digitizing”
+```
+
+如果找不到追踪按钮：
+
+```text
+Ctrl + K
+搜索：追踪
+或搜索：Trace
+```
+
+追踪绘制：
 
 ```text
 合肥南 -> 高邮
@@ -200,6 +242,8 @@ trip_ferry_zhenyang
 ```
 
 渡轮不是铁路，不要使用黑白铁轨样式。建议用深蓝或蓝灰色虚线，线宽约 `0.6-0.8 mm`，标签写 `镇扬汽渡`。
+
+遇到铁路枢纽、并行铁路或追踪跳远时，把长段拆成短段，在转折点附近多点几次。
 
 ## 7. 导出图片
 

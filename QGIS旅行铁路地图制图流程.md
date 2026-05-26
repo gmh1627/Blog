@@ -32,7 +32,80 @@ URL：https://tile.openstreetmap.org/{z}/{x}/{y}.png
 
 把 `OpenStreetMap` 放在最底层，导出时不透明度建议 `35-55%`。
 
-## 3. 导入行政区 GeoJSON
+## 3. 全国底图：只显示省界、省名和市名
+
+如果想做类似普通中国地图的底图：显示省界、省名、市名，但不显示市界，建议使用两个 DataV 图层叠加。
+
+省界、省名图层：
+
+```text
+https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json
+```
+
+导入后命名为：
+
+```text
+china_province
+```
+
+样式：
+
+```text
+填充：浅色，例如 #EEF2EA
+填充不透明度：100%
+边界：#333333
+线宽：0.3-0.5 mm
+标签字段："name"
+```
+
+市名图层：
+
+```text
+https://geo.datav.aliyun.com/areas_v3/bound/100000_full_city.json
+```
+
+导入后命名为：
+
+```text
+china_city_label
+```
+
+这个图层只用来显示市名，不显示市界。样式设置：
+
+```text
+填充不透明度：0%
+边界不透明度：0%
+标签字段："name"
+```
+
+如果不想显示北京、上海、天津、重庆的区县名，可给 `china_city_label` 使用标准 SQL 过滤：
+
+```sql
+SELECT *
+FROM "china_city_label"
+WHERE "adcode" NOT LIKE '11%'
+AND "adcode" NOT LIKE '12%'
+AND "adcode" NOT LIKE '31%'
+AND "adcode" NOT LIKE '50%'
+```
+
+直辖市名称由 `china_province` 图层显示即可。
+
+全国底图推荐图层顺序：
+
+```text
+my_station
+trip_route
+china_railwayosm__lines
+china_railwayosm__multilinestrings
+china_city_label
+china_province
+OpenStreetMap 可选
+```
+
+全国范围内市名会很密。若画面太乱，建议全国图只显示省名；局部放大图再显示地级市名。
+
+## 4. 导入行政区 GeoJSON
 
 DataV GeoJSON 直接拖入 QGIS，或通过：
 
@@ -75,7 +148,7 @@ WHERE "name" IN (
 )
 ```
 
-## 4. 导出铁路 OSM 到 GPKG
+## 5. 导出铁路 OSM 到 GPKG
 
 把 `china_railway.osm.pbf` 拖入 QGIS，选择需要的子图层：
 
@@ -118,7 +191,7 @@ WHERE "name" IN (
 GROUP BY "name"
 ```
 
-## 5. 图层顺序
+## 6. 图层顺序
 
 从上到下：
 
@@ -139,7 +212,7 @@ OpenStreetMap
 
 标签图层放在行程线上方，避免铁路压住文字。
 
-## 6. 样式规范
+## 7. 样式规范
 
 普通地级市底图：
 
@@ -198,7 +271,7 @@ OpenStreetMap
 车站点：粉色圆点 #E88AA5，描边 #7A2E42，大小 2.2-2.8 mm
 ```
 
-## 7. 新建行程线
+## 8. 新建行程线
 
 在本篇专用 `.gpkg` 中新建线图层：
 
@@ -222,7 +295,7 @@ mode     文本
 note     文本
 ```
 
-## 8. 启用捕捉与追踪
+## 9. 启用捕捉与追踪
 
 显示捕捉工具栏：
 
@@ -291,7 +364,7 @@ QGIS 会沿已有铁路生成中间线
 在铁路枢纽、并行线、断点处手动多点几下
 ```
 
-## 9. 其他交通方式
+## 10. 其他交通方式
 
 汽车、轮渡、步行不要使用黑白铁轨样式，另建图层：
 
@@ -311,7 +384,7 @@ trip_walk
 
 旅行顺序箭头可以用行程线的“标记线”符号层添加三角箭头，或另建 `trip_arrow` 图层手动画短箭头。
 
-## 10. 导出图片
+## 11. 导出图片
 
 先在主画布设置范围：
 

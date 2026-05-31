@@ -34,7 +34,7 @@ URL：https://tile.openstreetmap.org/{z}/{x}/{y}.png
 
 ## 3. 全国底图：只显示省界、省名和市名
 
-如果想做类似普通中国地图的底图：显示省界、省名、市名，但不显示市界，建议使用两个 DataV 图层叠加。
+如果想做类似普通中国地图的底图：显示省界、省名、市名，但不显示市界，建议使用三个 DataV 图层叠加。
 
 省界、省名图层：
 
@@ -48,14 +48,33 @@ https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json
 china_province
 ```
 
-样式：
+`china_province` 只做省份底图：
 
 ```text
-填充：浅色，例如 #EEF2EA
+填充：#ECE8D8
 填充不透明度：100%
-边界：#333333
-线宽：0.3-0.5 mm
+边界：#C8C1AC
+线宽：0.15-0.25 mm
+标签：关闭
+```
+
+再复制一份 `china_province`，命名为：
+
+```text
+china_province_label
+```
+
+`china_province_label` 放在铁路和高亮图层上方，只显示省界和省名：
+
+```text
+填充不透明度：0%
+边界：#5F5A50
+线宽：0.45-0.65 mm
 标签字段："name"
+字体：华文隶书
+字号：12-14 pt
+颜色：#2E2A24
+白色描边：0.8 mm
 ```
 
 市名图层：
@@ -76,6 +95,10 @@ china_city_label
 填充不透明度：0%
 边界不透明度：0%
 标签字段："name"
+字体：华文新魏
+字号：7-8 pt
+颜色：#4D4D4D
+白色描边：0.5 mm
 ```
 
 如果不想显示北京、上海、天津、重庆的区县名，可给 `china_city_label` 使用标准 SQL 过滤：
@@ -87,18 +110,21 @@ WHERE "adcode" NOT LIKE '11%'
 AND "adcode" NOT LIKE '12%'
 AND "adcode" NOT LIKE '31%'
 AND "adcode" NOT LIKE '50%'
+AND "adcode" NOT LIKE '81%'
+AND "adcode" NOT LIKE '82%'
 ```
 
-直辖市名称由 `china_province` 图层显示即可。
+直辖市、香港、澳门名称由 `china_province` 图层显示即可。
 
 全国底图推荐图层顺序：
 
 ```text
 my_station
+china_province_label
+china_city_label
 trip_route
 china_railwayosm__lines
 china_railwayosm__multilinestrings
-china_city_label
 china_province
 OpenStreetMap 可选
 ```

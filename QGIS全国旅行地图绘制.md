@@ -43,9 +43,22 @@ china_province
 用途：
 
 ```text
-显示省界
-显示省名
-显示直辖市名
+作为省份底图
+显示未去过省份的淡色铺底
+```
+
+再复制一份 `china_province`，命名为：
+
+```text
+china_province_label
+```
+
+用途：
+
+```text
+只显示省界、省名、直辖市名
+放在铁路路线和高亮区域上方
+避免省名和省界被铁路压住
 ```
 
 导入 `100000_full_city.json`，命名为：
@@ -69,7 +82,7 @@ china_city_label
 标签字段："name"
 ```
 
-如果不想显示北京、上海、天津、重庆的区县名，给 `china_city_label` 过滤：
+如果不想显示北京、上海、天津、重庆、香港、澳门的区县名，给 `china_city_label` 过滤：
 
 ```sql
 SELECT *
@@ -78,6 +91,8 @@ WHERE "adcode" NOT LIKE '11%'
 AND "adcode" NOT LIKE '12%'
 AND "adcode" NOT LIKE '31%'
 AND "adcode" NOT LIKE '50%'
+AND "adcode" NOT LIKE '81%'
+AND "adcode" NOT LIKE '82%'
 ```
 
 这样全国图能显示：
@@ -111,22 +126,40 @@ travel_map_china_rail_route.gpkg
 铁路路线图也要保留全国行政阅读信息：
 
 ```text
-china_province：显示省界、省名
+china_province：只做省份淡色底图
+china_province_label：显示省界、省名
 china_city_label：只显示市名，不显示市界
 ```
 
-`china_province` 样式：
+`china_province` 省份底图样式：
 
 ```text
-填充：#F6F6F3
+填充：#ECE8D8
 填充不透明度：100%
-边界：#777777
-线宽：0.35-0.5 mm
+边界：#C8C1AC
+线宽：0.15-0.25 mm
+标签：关闭
+```
+
+`china_province_label` 样式：
+
+```text
+填充不透明度：0%
+边界：#5F5A50
+线宽：0.45-0.65 mm
 标签字段："name"
-标签字体：华文新魏或等线
+标签字体：华文隶书
 标签字号：12-14 pt
-标签颜色：#333333
+标签颜色：#2E2A24
 白色描边：0.8 mm
+```
+
+如果电脑没有 `华文隶书`，可改用：
+
+```text
+华文新魏
+等线
+微软雅黑
 ```
 
 `china_city_label` 样式：
@@ -135,13 +168,13 @@ china_city_label：只显示市名，不显示市界
 填充不透明度：0%
 边界不透明度：0%
 标签字段："name"
-标签字体：等线
+标签字体：华文新魏
 标签字号：7-8 pt
-标签颜色：#555555
+标签颜色：#4D4D4D
 白色描边：0.5 mm
 ```
 
-`china_city_label` 如果显示直辖市区县名，使用过滤：
+`china_city_label` 如果显示直辖市、香港、澳门区县名，使用过滤：
 
 ```sql
 SELECT *
@@ -150,6 +183,8 @@ WHERE "adcode" NOT LIKE '11%'
 AND "adcode" NOT LIKE '12%'
 AND "adcode" NOT LIKE '31%'
 AND "adcode" NOT LIKE '50%'
+AND "adcode" NOT LIKE '81%'
+AND "adcode" NOT LIKE '82%'
 ```
 
 全国图市名会很密。可以先全部显示，如果压住铁路路线，再改成：
@@ -399,7 +434,7 @@ Ctrl + K
 
 ```text
 travelled_station
-china_province_label 可选
+china_province_label
 china_city_label
 travelled_rail_route
 china_railwayosm__lines
@@ -408,7 +443,7 @@ china_province
 OpenStreetMap 可选
 ```
 
-如果铁路路线压住市名，可以把 `china_city_label` 放到 `travelled_rail_route` 上方；如果市名压住路线，则放到路线下方。最终以阅读路线为主。
+`china_province_label` 必须放在铁路上方，用来保证省界和省名清楚。`china_city_label` 也建议放在铁路上方；如果市名压住路线太多，再把它放到 `travelled_rail_route` 下方。最终以阅读路线为主。
 
 ## 3. 地图 2：全国到访城市与省份图
 
@@ -512,8 +547,8 @@ WHERE "name" IN (
 未去过省份不要放进 `visited_province`。它们只由底层 `china_province` 显示：
 
 ```text
-填充：#F6F6F3
-边界：#BBBBBB
+填充：#ECE8D8
+边界：#C8C1AC
 线宽：0.25-0.35 mm
 ```
 
@@ -619,7 +654,7 @@ WHERE "name" IN (
 )
 ```
 
-直辖市北京、上海、天津不要从 `china_city_label` 里取区县，另从 `china_province` 复制一个图层：
+到过的直辖市不要从 `china_city_label` 里取区县，另从 `china_province` 复制一个图层：
 
 ```text
 visited_municipality_area
@@ -646,17 +681,38 @@ WHERE "name" IN (
 线宽：0.35-0.5 mm
 ```
 
-直辖市样式同 `visited_city_area`。
+直辖市样式同 `visited_city_area`。香港、澳门虽然也要从 `china_city_label` 里过滤区名，但只有实际去过时才加入这个图层。
 
 ## 3.3 城市名与省名
 
-`china_province` 标签：
+`china_province_label` 标签：
 
 ```text
 字段："name"
-字体：华文新魏
+字体：华文隶书
 字号：12-14 pt
-颜色：#333333
+颜色：#2E2A24
+白色描边：0.8 mm
+```
+
+`china_province` 面样式：
+
+```text
+未高亮省份填充：#ECE8D8
+省界：#C8C1AC
+线宽：0.15-0.25 mm
+标签：关闭
+```
+
+`china_province_label` 省名和省界样式：
+
+```text
+填充不透明度：0%
+省界：#5F5A50
+线宽：0.45-0.65 mm
+字体：华文隶书
+字号：12-14 pt
+颜色：#2E2A24
 白色描边：0.8 mm
 ```
 
@@ -664,7 +720,7 @@ WHERE "name" IN (
 
 ```text
 字段："name"
-字体：等线
+字体：华文新魏
 字号：7-8 pt
 颜色：#555555
 白色描边：0.5 mm
@@ -687,6 +743,7 @@ WHERE "name" IN (
 visited_municipality_area
 visited_city_area
 visited_province
+china_province_label
 china_city_label
 china_province
 OpenStreetMap 可选

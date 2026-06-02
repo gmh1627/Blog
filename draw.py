@@ -40,8 +40,8 @@ TOP_MARGIN = 0.84
 
 CITY_DATA = {
     "years": ["大学前", "2022-2023", "2024", "2025", "2026"],
-    "new_cities": [19, 2, 21, 21, 17],
-    "cumulative_cities": [19, 21, 42, 63, 80],
+    "new_cities": [19, 2, 21, 21, 18],
+    "cumulative_cities": [19, 21, 42, 63, 81],
 }
 
 

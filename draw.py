@@ -40,8 +40,8 @@ TOP_MARGIN = 0.84
 
 CITY_DATA = {
     "years": ["大学前", "2022-2023", "2024", "2025", "2026"],
-    "new_cities": [19, 2, 21, 21, 22],
-    "cumulative_cities": [19, 21, 42, 63, 85],
+    "new_cities": [19, 2, 21, 21, 23],
+    "cumulative_cities": [19, 21, 42, 63, 86],
 }
 
 
@@ -162,8 +162,11 @@ def draw_area_chart(labels, values, title, ylabel, output_name, line_color, fill
     plt.close(fig)
 
 
-def extract_table_lines(markdown_text, marker):
+def extract_table_lines(markdown_text, markers):
     """Locate a Markdown table by its nearby section marker."""
+    if isinstance(markers, str):
+        markers = [markers]
+
     lines = markdown_text.splitlines()
     collected_lines = []
     found_marker = False
@@ -173,7 +176,7 @@ def extract_table_lines(markdown_text, marker):
         line = raw_line.strip()
 
         if not found_marker:
-            if marker in line:
+            if any(marker in line for marker in markers):
                 found_marker = True
             continue
 
@@ -186,7 +189,8 @@ def extract_table_lines(markdown_text, marker):
             break
 
     if not collected_lines:
-        raise ValueError(f"未找到 {marker} 对应的 Markdown 表格。")
+        marker_text = " / ".join(markers)
+        raise ValueError(f"未找到 {marker_text} 对应的 Markdown 表格。")
 
     return collected_lines
 
@@ -408,8 +412,8 @@ def main():
         marker="D",
     )
 
-    railway_stats = parse_yearly_transport_stats(markdown_text, "铁路记录如下")
-    flight_stats = parse_yearly_transport_stats(markdown_text, "飞行记录如下")
+    railway_stats = parse_yearly_transport_stats(markdown_text, ["铁路记录如下", "展开铁路记录表"])
+    flight_stats = parse_yearly_transport_stats(markdown_text, ["飞行记录如下", "展开飞行记录表"])
     years = build_year_range(railway_stats, flight_stats)
 
     railway_counts, railway_distances = build_series(railway_stats, years)

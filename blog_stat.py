@@ -1,13 +1,28 @@
 import os
+import re
 import requests
 from bs4 import BeautifulSoup
 from requests.exceptions import SSLError, ProxyError
 import time
 from datetime import datetime
 from collections import defaultdict
+from urllib.parse import urljoin
 
 # 设为 True 可强制重新爬取读书笔记（即使文件已存在）
 FORCE_RESCRAPE_DUSHU = True
+
+JOURNEY_INDEX_FILE = os.path.join("source", "journey", "index.md")
+SITE_URL = "https://kangaroogao.com/"
+JOURNEY_EXCLUDED_TITLES = {"行程轨迹汇总"}
+
+JOURNEY_ARTICLE_PATTERN = re.compile(
+    r"^(?P<indent>[ \t]*)-\s+\[(?P<title>.+?)\]\((?P<href>[^)]+)\)"
+    r"(?:[（(][^）)]*[）)])?[ \t]*$"
+)
+JOURNEY_YEAR_PATTERN = re.compile(
+    r"^(?P<indent>[ \t]*)-\s+(?P<year>\d{4})"
+    r"(?:[（(][^）)]*[）)])?[ \t]*$"
+)
 
 
 def parse_local_date_from_time_tag(time_element, default_value):
@@ -52,6 +67,129 @@ def get_yearly_stats(all_articles):
             yearly_stats[year]["word_count"] += word_count
 
     return sorted(yearly_stats.items(), key=lambda x: x[0])
+
+
+def format_word_count(word_count):
+    """将字数格式化为适合索引展示的简短文本。"""
+    if word_count >= 1000:
+        return f"{round(word_count / 1000, 1):g}k"
+    return str(int(word_count))
+
+
+def normalize_article_url(url):
+    """统一文章 URL，便于复用前面已经抓取到的结果。"""
+    return url.rstrip('/') + '/'
+
+
+def update_journey_index_word_counts(known_articles=None, index_file=JOURNEY_INDEX_FILE):
+    """按 journey 索引中的分组写入文章字数和各年份总字数。"""
+    if not os.path.exists(index_file):
+        print(f"\n[行程索引] 未找到 '{index_file}'，跳过更新")
+        return False
+
+    with open(index_file, 'r', encoding='utf-8', newline='') as f:
+        original_text = f.read()
+
+    newline = '\r\n' if '\r\n' in original_text else '\n'
+    has_trailing_newline = original_text.endswith(('\n', '\r'))
+    lines = original_text.splitlines()
+    parsed_articles = []
+    year_line_indexes = {}
+    current_year = None
+
+    for line_index, line in enumerate(lines):
+        year_match = JOURNEY_YEAR_PATTERN.match(line)
+        if year_match and not year_match.group('indent'):
+            current_year = year_match.group('year')
+            year_line_indexes[current_year] = line_index
+            continue
+
+        article_match = JOURNEY_ARTICLE_PATTERN.match(line)
+        if article_match:
+            title = article_match.group('title')
+            parsed_articles.append({
+                'line_index': line_index,
+                'indent': article_match.group('indent'),
+                'title': title,
+                'href': article_match.group('href'),
+                'year': current_year if article_match.group('indent') else None,
+            })
+            if not article_match.group('indent'):
+                current_year = None
+            continue
+
+        # 顶层的“常驻城市”等分组会结束前一个年份。
+        if line.startswith('- '):
+            current_year = None
+
+    article_cache = {}
+    for article in known_articles or []:
+        if article.get('url') and article.get('word_count', 0) > 0:
+            article_cache[normalize_article_url(article['url'])] = article['word_count']
+
+    word_counts = {}
+    failed_titles = []
+    for article in parsed_articles:
+        if article['title'] in JOURNEY_EXCLUDED_TITLES:
+            continue
+
+        article_url = normalize_article_url(urljoin(SITE_URL, article['href']))
+        word_count = article_cache.get(article_url)
+        if word_count is None:
+            print(f"[行程索引] 正在统计: {article['title']}")
+            try:
+                word_count, _, _, _ = get_word_count_from_article(article_url)
+            except requests.RequestException as e:
+                print(f"[行程索引] 获取失败: {article['title']} ({e})")
+                word_count = 0
+            if word_count > 0:
+                article_cache[article_url] = word_count
+            time.sleep(0.5)
+
+        if not word_count or word_count <= 0:
+            failed_titles.append(article['title'])
+        else:
+            word_counts[article['line_index']] = word_count
+
+    if failed_titles:
+        print(f"\n[行程索引] 以下文章未获取到字数，索引未修改: {', '.join(failed_titles)}")
+        return False
+
+    yearly_totals = defaultdict(float)
+    for article in parsed_articles:
+        word_count = word_counts.get(article['line_index'])
+        if article['year'] and word_count:
+            yearly_totals[article['year']] += word_count
+
+    for article in parsed_articles:
+        line_index = article['line_index']
+        if article['title'] in JOURNEY_EXCLUDED_TITLES:
+            lines[line_index] = (
+                f"{article['indent']}- [{article['title']}]({article['href']})"
+            )
+            continue
+
+        lines[line_index] = (
+            f"{article['indent']}- [{article['title']}]({article['href']})"
+            f"（{format_word_count(word_counts[line_index])}）"
+        )
+
+    for year, line_index in year_line_indexes.items():
+        total = yearly_totals.get(year, 0)
+        lines[line_index] = f"- {year}（{format_word_count(total)}）"
+
+    updated_text = newline.join(lines)
+    if has_trailing_newline:
+        updated_text += newline
+
+    if updated_text != original_text:
+        temp_file = f"{index_file}.tmp"
+        with open(temp_file, 'w', encoding='utf-8', newline='') as f:
+            f.write(updated_text)
+        os.replace(temp_file, index_file)
+
+    print(f"\n[行程索引] 已更新 '{index_file}' 的文章字数和年份总字数")
+    return True
 
 def get_word_count_from_article(article_url):
     """从单篇文章页面获取字数和时间信息"""
@@ -313,6 +451,8 @@ if combined_articles:
     print(f"\n统计结果已保存到 '文章统计.md' 文件")
 else:
     print(f"\n没有找到任何文章，未生成 '文章统计.md'")
+
+update_journey_index_word_counts(known_articles=combined_articles)
 
 
 # ===== 3. 读书笔记类别 =====

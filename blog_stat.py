@@ -260,7 +260,7 @@ def write_to_markdown(all_articles, total_word_count, filename="游记统计.md"
         
         f.write(f"## 总体统计\n\n")
         f.write(f"- 文章总数： {len(all_articles)} 篇\n")
-        f.write(f"- 总字数： {total_word_count_text} ({int(total_word_count)} 字)\n")
+        f.write(f"- 总字数： {total_word_count_text}\n")
         f.write(f"- 平均字数： {int(total_word_count / len(all_articles))} 字/篇\n\n")
 
         # 写入按年份统计

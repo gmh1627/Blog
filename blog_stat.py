@@ -9,7 +9,7 @@ from collections import defaultdict
 from urllib.parse import urljoin
 
 # 设为 True 可强制重新爬取读书笔记（即使文件已存在）
-FORCE_RESCRAPE_DUSHU = True
+FORCE_RESCRAPE_DUSHU = False
 
 JOURNEY_INDEX_FILE = os.path.join("source", "journey", "index.md")
 SITE_URL = "https://kangaroogao.com/"

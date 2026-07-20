@@ -6,6 +6,7 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
+    "deploy:all": "hexo clean && hexo generate && hexo deploy && python blog_stat.py && hexo clean && hexo generate && hexo deploy && git add . && git commit -m \"commit\" && git push origin main",
     "server": "hexo server"
   },
   "hexo": {

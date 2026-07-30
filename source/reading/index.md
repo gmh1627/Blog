@@ -12,7 +12,7 @@ title: Reading
    - [大四上](../posts/7f58)
    - [大四下](../posts/8359/)
 
-- [阅读记录](../posts/b7c9)
+- [本科阅读记录](../posts/b7c9)
 - [藏书](../posts/fcfb)
 - [书单](../posts/7f1c)
 - [我喜欢的诗](../posts/fa36)

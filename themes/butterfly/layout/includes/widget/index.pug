@@ -6,6 +6,8 @@
     if showToc && tocStyleVal
       .sticky_layout
         include ./card_post_toc.pug
+        !=partial('includes/widget/card_categories', {}, {cache: true})
+        !=partial('includes/widget/card_tags', {}, {cache: true})
     else
       !=partial('includes/widget/card_author', {}, {cache: true})
       !=partial('includes/widget/card_announcement', {}, {cache: true})
@@ -17,6 +19,8 @@
           include ./card_post_series.pug
         !=partial('includes/widget/card_recent_post', {}, {cache: true})
         !=partial('includes/widget/card_ad', {}, {cache: true})
+        !=partial('includes/widget/card_categories', {}, {cache: true})
+        !=partial('includes/widget/card_tags', {}, {cache: true})
         !=partial('includes/widget/card_map', {}, {cache: true})
   else
     //- page

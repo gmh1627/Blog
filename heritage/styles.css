@@ -1394,6 +1394,10 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 
+.read-only footer {
+  display: none;
+}
+
 @media (max-width: 1100px) {
   .analytics-grid {
     grid-template-columns: 1fr 1fr;

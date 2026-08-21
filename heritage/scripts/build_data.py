@@ -648,17 +648,22 @@ def summarize_locations(codes: set[str], admin: dict) -> dict[str, str] | None:
             "district": districts[0] if len(districts) == 1 else "跨县级行政区",
             "current_location": f'{provinces[0]} · {"、".join(districts)}',
         }
+    location_parts = [provinces[0], cities[0], "、".join(districts)]
+    if provinces[0] in MUNICIPALITIES and cities[0] == provinces[0]:
+        location_parts.pop(1)
     return {
         "province": provinces[0],
         "city": cities[0],
         "district": districts[0] if len(districts) == 1 else "跨县级行政区",
-        "current_location": f'{provinces[0]} · {cities[0]} · {"、".join(districts)}',
+        "current_location": " · ".join(location_parts),
     }
 
 
 def add_current_location(current: dict[str, str]) -> dict[str, str]:
     if "current_location" not in current:
         values = [current.get("province", ""), current.get("city", ""), current.get("district", "")]
+        if current.get("province") in MUNICIPALITIES and current.get("city") == current.get("province"):
+            values.pop(1)
         if current.get("city") in DIRECT_COUNTY_PREFECTURE_LABELS:
             values.pop(1)
         if current.get("district") == "不设县级行政区":

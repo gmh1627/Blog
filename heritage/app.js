@@ -97,6 +97,14 @@
     return "其他";
   }
 
+  function formatLocation(unit) {
+    if (unit.current_location) return unit.current_location;
+    const parts = [unit.province, unit.city, unit.district].filter(Boolean);
+    if (unit.province === unit.city) parts.splice(1, 1);
+    if (unit.district === "不设县级行政区") parts.pop();
+    return parts.join(" · ");
+  }
+
   units.forEach((unit) => {
     unit.period = unit.period || classifyPeriod(unit.era, unit.name);
   });
@@ -373,7 +381,7 @@
     elements.dialogTime.readOnly = readOnly;
     elements.dialogNotes.readOnly = readOnly;
     elements.saveDetailButton.hidden = readOnly;
-    elements.saveStatus.textContent = readOnly ? "博客公开数据 · 只读" : "当前浏览器本地保存";
+    elements.saveStatus.textContent = readOnly ? "" : "当前浏览器本地保存";
 
     elements.batchFilters.innerHTML = Array.from({ length: 8 }, (_, index) => {
       const batch = index + 1;
@@ -730,7 +738,7 @@
       <td class="col-batch"><span class="batch-badge">${unit.batch}</span></td>
       <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
       <td class="col-location">
-        <span class="location-current">${escapeHtml(unit.current_location || `${unit.province} · ${unit.city} · ${unit.district}`)}</span>
+        <span class="location-current">${escapeHtml(formatLocation(unit))}</span>
       </td>
       <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}></td>
       <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">${readOnly ? "查看" : "备注"}</button></td>
@@ -745,7 +753,7 @@
         <table class="heritage-table">
           <thead><tr>
             <th class="col-check">到访</th><th class="col-name">名称</th><th class="col-batch">批次</th>
-            <th class="col-category">类别 / 年代</th><th class="col-location">现行三级区划</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
+            <th class="col-category">类别 / 年代</th><th class="col-location">行政区划</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
           </tr></thead>
           <tbody>${groupUnits.map(renderRow).join("")}</tbody>
         </table>
@@ -874,7 +882,7 @@
     const facts = [
       ["类别", unit.category, false],
       ["年代", unit.period, false],
-      ["现行区划", unit.current_location || `${unit.province} · ${unit.city} · ${unit.district}`, true],
+      ["行政区划", formatLocation(unit), true],
     ];
     if (unit.alias) facts.splice(1, 0, ["别名", unit.alias, false]);
     if (unit.remark) facts.push(["备注", unit.remark, true]);

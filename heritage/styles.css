@@ -1314,6 +1314,10 @@ footer {
     grid-column: 1 / -1;
   }
 
+  #blogHomeLink {
+    grid-column: 1 / -1;
+  }
+
   .data-menu summary {
     width: 100%;
   }

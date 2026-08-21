@@ -22,7 +22,8 @@
   const urlParams = new URLSearchParams(window.location.search);
   const isStatisticsView = urlParams.get("view") === "stats";
 
-  function classifyPeriod(era) {
+  function classifyPeriod(era, name = "") {
+    if (["京杭大运河", "大运河"].includes(name)) return "隋唐五代";
     const value = String(era || "").replaceAll(" ", "");
     if (!value || /不详|未载|未知/.test(value)) return "其他";
     if (/以前/.test(value)) return "其他";
@@ -53,12 +54,12 @@
   }
 
   units.forEach((unit) => {
-    unit.period = unit.period || classifyPeriod(unit.era);
+    unit.period = unit.period || classifyPeriod(unit.era, unit.name);
   });
 
   const state = {
     query: "",
-    status: "all",
+    status: "visited",
     group: "province",
     batches: new Set([1, 2, 3, 4, 5, 6, 7, 8]),
     province: isStatisticsView
@@ -123,6 +124,7 @@
     recordsViewLink: document.querySelector("#recordsViewLink"),
     statisticsViewLink: document.querySelector("#statisticsViewLink"),
     dataMenu: document.querySelector(".data-menu"),
+    blogHomeLink: document.querySelector("#blogHomeLink"),
     saveStatus: document.querySelector("#saveStatus"),
     saveDetailButton: document.querySelector("#saveDetailButton"),
     toast: document.querySelector("#toast"),
@@ -236,6 +238,7 @@
     currentViewLink.setAttribute("aria-current", "page");
     document.body.classList.toggle("read-only", readOnly);
     elements.dataMenu.hidden = readOnly;
+    elements.blogHomeLink.hidden = !readOnly;
     elements.clearRecordsButton.hidden = readOnly;
     elements.dialogVisited.disabled = readOnly;
     elements.dialogTime.readOnly = readOnly;
@@ -574,7 +577,7 @@
 
   function resetFilters() {
     state.query = "";
-    state.status = "all";
+    state.status = "visited";
     state.group = "province";
     state.batches = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
     state.province = "北京市";
@@ -826,6 +829,15 @@
       }
     });
 
+    elements.resultGroups.addEventListener("input", (event) => {
+      const row = event.target.closest("tr[data-id]");
+      if (!row || !event.target.matches(".visit-time-input")) return;
+      updateRecord(row.dataset.id, {
+        time: event.target.value,
+        visited: Boolean(event.target.value.trim()) || recordFor(row.dataset.id).visited,
+      });
+    });
+
     elements.pagination.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-page]");
       if (!button || button.disabled) return;
@@ -890,6 +902,20 @@
 
     document.addEventListener("click", (event) => {
       if (elements.dataMenu.open && !elements.dataMenu.contains(event.target)) elements.dataMenu.open = false;
+    });
+
+    window.addEventListener("pagehide", () => {
+      if (readOnly || !editorConnected) return;
+      if (state.activeDetailId && elements.detailDialog.open) {
+        records[state.activeDetailId] = {
+          visited: elements.dialogVisited.checked || Boolean(elements.dialogTime.value.trim()),
+          time: elements.dialogTime.value.trim(),
+          notes: elements.dialogNotes.value.trim(),
+        };
+        localStorage.setItem(storageKey, JSON.stringify(records));
+      }
+      const payload = JSON.stringify({ version: 1, records });
+      navigator.sendBeacon("/api/records", new Blob([payload], { type: "application/json" }));
     });
 
     elements.clearRecordsButton.addEventListener("click", () => {

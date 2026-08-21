@@ -86,6 +86,11 @@ NAME_OVERRIDES = {
     "真覚寺金刚宝座（五塔寺塔）": ("真觉寺金刚宝座（五塔寺塔）", ""),
 }
 
+PERIOD_OVERRIDES = {
+    "京杭大运河": "隋唐五代",
+    "大运河": "隋唐五代",
+}
+
 
 def http_session() -> requests.Session:
     session = requests.Session()
@@ -129,7 +134,9 @@ def normalize_name(value: str) -> tuple[str, str]:
     return name.replace("覚", "觉"), ""
 
 
-def classify_period(era: str) -> str:
+def classify_period(era: str, name: str = "") -> str:
+    if name in PERIOD_OVERRIDES:
+        return PERIOD_OVERRIDES[name]
     value = clean(era)
     if not value or re.search(r"不详|未载|未知", value):
         return "其他"
@@ -260,7 +267,7 @@ def parse_merged_table(batch: int, table) -> list[dict[str, str | int | bool]]:
             "year": {4: 1996, 5: 2001, 6: 2006, 7: 2013, 8: 2019}[batch],
             "category": category,
             "era": clean(era),
-            "period": classify_period(era),
+            "period": classify_period(era, name),
             "province": primary_province(location),
             "location": location,
             "kind": "merged",
@@ -302,7 +309,7 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
             "batch": batch,
             "year": years[batch],
             "category": CATEGORY_LABELS.get(item.get("category", ""), "未分类"),
-            "period": classify_period(era),
+            "period": classify_period(era, name),
             "era": era,
             "province": primary_province(location),
             "location": location,
@@ -326,7 +333,7 @@ def batch4_merged_items() -> list[dict]:
             "year": 1996,
             "category": "未分类",
             "era": era,
-            "period": classify_period(era),
+            "period": classify_period(era, name),
             "province": primary_province(location),
             "location": location,
             "kind": "merged",
@@ -342,7 +349,7 @@ def write_outputs(units: list[dict]) -> None:
         "id", "code", "name", "alias", "batch", "year", "category", "period", "era", "province",
         "location", "kind", "remark", "source", "visited", "visit_time", "notes",
     )
-    with (DATA_DIR / "全国重点文物保护单位.csv").open("w", encoding="utf-8-sig", newline="") as handle:
+    with (DATA_DIR / "heritage.csv").open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         for unit in units:

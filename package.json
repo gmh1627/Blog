@@ -6,8 +6,8 @@
     "build": "hexo generate",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
-    "heritage": "node \"./全国重点文物保护单位/scripts/editor_server.mjs\"",
-    "predeploy:all": "node \"./全国重点文物保护单位/scripts/prepare_publish.mjs\"",
+    "heritage": "node \"./heritage/scripts/editor_server.mjs\"",
+    "predeploy:all": "node \"./heritage/scripts/prepare_publish.mjs\"",
     "deploy:all": "hexo clean && hexo generate && hexo deploy && python blog_stat.py && hexo clean && hexo generate && hexo deploy && git add . && git commit -m \"commit\" && git push origin main",
     "server": "hexo server"
   },

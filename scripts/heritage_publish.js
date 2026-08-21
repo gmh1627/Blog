@@ -4,7 +4,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 
 hexo.extend.filter.register('after_generate', async function () {
-  const appRoot = path.join(hexo.base_dir, '全国重点文物保护单位');
+  const appRoot = path.join(hexo.base_dir, 'heritage');
   const outputRoot = path.join(hexo.public_dir, 'heritage');
   const outputData = path.join(outputRoot, 'data');
   const privateRecordsPath = path.join(appRoot, 'data', 'visits.private.json');

@@ -7,4 +7,4 @@ public/
 .deploy*/
 _multiconfig.yml
 __pycache__/
-全国重点文物保护单位/data/visits.private.json
+heritage/data/visits.private.json

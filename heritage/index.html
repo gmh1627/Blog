@@ -29,6 +29,7 @@
           <button id="exportCsvButton" type="button" title="将当前筛选结果导出为可用 Excel 打开的表格">导出当前 CSV</button>
         </div>
       </details>
+      <a class="button secondary" id="blogHomeLink" href="https://kangaroogao.com/" hidden>返回主页</a>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
@@ -110,8 +111,8 @@
         <input id="searchInput" type="search" placeholder="名称、编号、地址、年代" autocomplete="off">
       </label>
       <div class="segmented" id="statusControl" aria-label="到访状态">
-        <button type="button" class="active" data-status="all">全部</button>
-        <button type="button" data-status="visited">已到访</button>
+        <button type="button" data-status="all">全部</button>
+        <button type="button" class="active" data-status="visited">已到访</button>
         <button type="button" data-status="unvisited">未到访</button>
       </div>
       <div class="segmented" id="groupControl" aria-label="分组方式">

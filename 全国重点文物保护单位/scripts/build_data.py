@@ -79,6 +79,13 @@ BATCH4_MERGED = (
     ("东千佛洞石窟", "北魏至西夏", "甘肃省安西县", "归入榆林窟"),
 )
 
+NAME_OVERRIDES = {
+    "芦一作“卢”沟桥": ("卢沟桥", ""),
+    "北京城东南角楼一作“北京市城东南角楼”": ("北京城东南角楼", ""),
+    "大士阁一作“大土阁”": ("大士阁", "大土阁"),
+    "真覚寺金刚宝座（五塔寺塔）": ("真觉寺金刚宝座（五塔寺塔）", ""),
+}
+
 
 def http_session() -> requests.Session:
     session = requests.Session()
@@ -112,12 +119,22 @@ def clean(value: str) -> str:
     return re.sub(r"\s+", "", value).replace("－", "-").replace("～", "至")
 
 
+def normalize_name(value: str) -> tuple[str, str]:
+    name = clean(value)
+    if name in NAME_OVERRIDES:
+        return NAME_OVERRIDES[name]
+    match = re.fullmatch(r"(.+?)一作[“\"](.+?)[”\"]", name)
+    if match:
+        return match.group(1), match.group(2)
+    return name.replace("覚", "觉"), ""
+
+
 def classify_period(era: str) -> str:
     value = clean(era)
     if not value or re.search(r"不详|未载|未知", value):
         return "其他"
-    if "近现代" in value:
-        return "近现代"
+    if "以前" in value:
+        return "其他"
     groups = (
         ("史前", r"旧石器|新石器|史前|更新世|古生代"),
         ("夏商周", r"先秦|(?<!西)夏|商|西周|东周|(?<!北|后)周|春秋|战国|青铜时代"),
@@ -128,29 +145,19 @@ def classify_period(era: str) -> str:
         ("元", r"(?<!公)元"),
         ("明", r"明"),
         ("清", r"清"),
-        ("近代", r"民国|近代"),
+        ("近代", r"民国|近现代|近代"),
         ("现代", r"中华人民共和国|现代|当代|至今"),
     )
-    matched = list(dict.fromkeys(label for label, pattern in groups if re.search(pattern, value)))
-    if "以前" in value:
-        return "跨时期"
-    if len(matched) == 1:
-        return matched[0]
-    if len(matched) == 2 and {"明", "清"} == set(matched):
-        return "明清"
-    if len(matched) == 2 and {"近代", "现代"} == set(matched):
-        return "近现代"
-    if len(matched) > 1:
-        return "跨时期"
+    for label, pattern in groups:
+        if re.search(pattern, value):
+            return label
     years = [int(match.group(1)) for match in re.finditer(r"(?<!公元前)(\d{3,4})年?", value)]
     if years:
-        earliest, latest = min(years), max(years)
+        earliest = min(years)
         if earliest >= 1949:
             return "现代"
-        if latest < 1949 and earliest >= 1840:
+        if earliest >= 1840:
             return "近代"
-        if earliest < 1840 <= latest:
-            return "跨时期"
     return "其他"
 
 
@@ -243,10 +250,12 @@ def parse_merged_table(batch: int, table) -> list[dict[str, str | int | bool]]:
         else:
             code, name, era, location, remark = "", *cells[1:]
         location = clean(location)
+        name, alias = normalize_name(name)
         units.append({
             "id": f"merge-{batch}-{serial:03d}",
             "code": clean(code),
-            "name": clean(name),
+            "name": name,
+            "alias": alias,
             "batch": batch,
             "year": {4: 1996, 5: 2001, 6: 2006, 7: 2013, 8: 2019}[batch],
             "category": category,
@@ -284,10 +293,12 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
         fallback_location = clean(f"{item.get('province', '')}{item.get('city', '')}")
         location = notice["location"] if notice else fallback_location
         era = (notice["era"] if notice else "") or clean(item.get("era", ""))
+        name, alias = normalize_name(notice["name"] if notice else item["name"])
         results.append({
             "id": item["id"],
             "code": item["id"],
-            "name": notice["name"] if notice else clean(item["name"]),
+            "name": name,
+            "alias": alias,
             "batch": batch,
             "year": years[batch],
             "category": CATEGORY_LABELS.get(item.get("category", ""), "未分类"),
@@ -304,11 +315,13 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
 
 def batch4_merged_items() -> list[dict]:
     results = []
-    for serial, (name, era, location, remark) in enumerate(BATCH4_MERGED, 1):
+    for serial, (raw_name, era, location, remark) in enumerate(BATCH4_MERGED, 1):
+        name, alias = normalize_name(raw_name)
         results.append({
             "id": f"merge-4-{serial:03d}",
             "code": "",
             "name": name,
+            "alias": alias,
             "batch": 4,
             "year": 1996,
             "category": "未分类",
@@ -326,7 +339,7 @@ def batch4_merged_items() -> list[dict]:
 def write_outputs(units: list[dict]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     fields = (
-        "id", "code", "name", "batch", "year", "category", "period", "era", "province",
+        "id", "code", "name", "alias", "batch", "year", "category", "period", "era", "province",
         "location", "kind", "remark", "source", "visited", "visit_time", "notes",
     )
     with (DATA_DIR / "全国重点文物保护单位.csv").open("w", encoding="utf-8-sig", newline="") as handle:

@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light">
   <title>国保足迹 - 全国重点文物保护单位到访记录</title>
   <link rel="stylesheet" href="./styles.css">
+  <script src="./data/runtime.js" defer></script>
   <script src="./data/units.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
@@ -15,15 +16,24 @@
       <p class="eyebrow">第一至第八批</p>
       <h1>国保足迹</h1>
     </div>
-    <div class="header-actions" aria-label="数据操作">
-      <button class="button secondary" id="importButton" type="button">导入记录</button>
-      <button class="button secondary" id="exportJsonButton" type="button">备份记录</button>
-      <button class="button primary" id="exportCsvButton" type="button">导出当前 CSV</button>
+    <div class="header-actions">
+      <nav class="view-nav" aria-label="页面导航">
+        <a class="button secondary" id="recordsViewLink" href="./index.html">名录与记录</a>
+        <a class="button secondary" id="statisticsViewLink" href="./index.html?view=stats">到访统计</a>
+      </nav>
+      <details class="data-menu">
+        <summary class="button secondary">数据</summary>
+        <div class="data-menu-popover" aria-label="数据操作">
+          <button id="importButton" type="button" title="从此前备份的 JSON 恢复到访记录">导入备份</button>
+          <button id="exportJsonButton" type="button" title="将浏览器中的到访时间和备注保存为 JSON">备份记录</button>
+          <button id="exportCsvButton" type="button" title="将当前筛选结果导出为可用 Excel 打开的表格">导出当前 CSV</button>
+        </div>
+      </details>
       <input id="importFile" type="file" accept="application/json,.json" hidden>
     </div>
   </header>
 
-  <main>
+  <main id="statisticsView" class="page-view" hidden>
     <section class="stats-band" aria-label="到访概况">
       <div class="stat">
         <span class="stat-label">独立国保</span>
@@ -40,23 +50,6 @@
       <div class="stat">
         <span class="stat-label">完成度</span>
         <strong id="rateStat">0.0%</strong>
-      </div>
-    </section>
-
-    <section class="control-band" aria-label="筛选和视图">
-      <label class="search-field">
-        <span>搜索</span>
-        <input id="searchInput" type="search" placeholder="名称、编号、地址、年代、时代" autocomplete="off">
-      </label>
-      <div class="segmented" id="statusControl" aria-label="到访状态">
-        <button type="button" class="active" data-status="all">全部</button>
-        <button type="button" data-status="visited">已到访</button>
-        <button type="button" data-status="unvisited">未到访</button>
-      </div>
-      <div class="segmented" id="groupControl" aria-label="分组方式">
-        <button type="button" class="active" data-group="province">按省份</button>
-        <button type="button" data-group="batch">按批次</button>
-        <button type="button" data-group="period">按年代</button>
       </div>
     </section>
 
@@ -98,12 +91,42 @@
       </div>
     </section>
 
+    <section class="statistics-provinces" aria-labelledby="provinceProgressTitle">
+      <div class="analytics-heading">
+        <div>
+          <p class="eyebrow">区域完成度</p>
+          <h2 id="provinceProgressTitle">省份进度</h2>
+        </div>
+        <p class="analytics-summary">选择省份可返回名录继续标记</p>
+      </div>
+      <div id="provinceProgress" class="province-progress-grid"></div>
+    </section>
+  </main>
+
+  <main id="recordsView" class="page-view">
+    <section class="control-band" aria-label="筛选和视图">
+      <label class="search-field">
+        <span>搜索</span>
+        <input id="searchInput" type="search" placeholder="名称、编号、地址、年代" autocomplete="off">
+      </label>
+      <div class="segmented" id="statusControl" aria-label="到访状态">
+        <button type="button" class="active" data-status="all">全部</button>
+        <button type="button" data-status="visited">已到访</button>
+        <button type="button" data-status="unvisited">未到访</button>
+      </div>
+      <div class="segmented" id="groupControl" aria-label="分组方式">
+        <button type="button" class="active" data-group="province">按省份</button>
+        <button type="button" data-group="batch">按批次</button>
+        <button type="button" data-group="period">按年代</button>
+      </div>
+    </section>
+
     <div class="workspace">
       <aside class="filters" aria-label="筛选条件">
         <div class="filter-section">
           <div class="filter-heading">
             <span>批次</span>
-            <button id="allBatchesButton" class="text-button" type="button">清除</button>
+            <button id="allBatchesButton" class="text-button" type="button">全部</button>
           </div>
           <div class="batch-grid" id="batchFilters"></div>
         </div>
@@ -135,11 +158,6 @@
       </aside>
 
       <section class="results" aria-label="文物保护单位列表">
-        <details class="province-progress" open>
-          <summary>省份进度</summary>
-          <div id="provinceProgress" class="province-progress-grid"></div>
-        </details>
-
         <div class="result-toolbar">
           <p id="resultCount" aria-live="polite"></p>
           <div class="result-page-tools">
@@ -154,6 +172,12 @@
             <button id="previousPageButton" class="page-step" type="button" aria-label="上一页" title="上一页">‹</button>
             <span id="pageIndicator" class="page-indicator">1 / 1</span>
             <button id="nextPageButton" class="page-step" type="button" aria-label="下一页" title="下一页">›</button>
+            <label class="page-jump">
+              前往
+              <input id="pageJumpInput" type="number" min="1" step="1" inputmode="numeric" aria-label="跳转页码">
+              页
+            </label>
+            <button id="pageJumpButton" class="button secondary page-jump-button" type="button">跳转</button>
           </div>
         </div>
 
@@ -196,6 +220,7 @@
 
   <footer>
     <span>数据口径：独立国保 5,058 处，另收录并入项目 238 项。</span>
+    <span id="saveStatus" class="save-status"></span>
     <button id="clearRecordsButton" class="text-button danger" type="button">清空个人记录</button>
   </footer>
 </body>

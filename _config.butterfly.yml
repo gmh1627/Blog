@@ -18,6 +18,7 @@ nav:
 
 menu:
   Home: / || fas fa-home
+  Heritage: /heritage/ || fas fa-landmark
   #About: /about/ || fas fa-user
   #Movies: /movies/ || fas fa-video
   # Reading: /reading/ || fas fa-book

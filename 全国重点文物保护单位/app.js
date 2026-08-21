@@ -3,6 +3,10 @@
 
   const units = Array.isArray(window.HERITAGE_UNITS) ? window.HERITAGE_UNITS : [];
   const unitById = new Map(units.map((unit) => [unit.id, unit]));
+  const runtime = window.HERITAGE_RUNTIME && typeof window.HERITAGE_RUNTIME === "object"
+    ? window.HERITAGE_RUNTIME
+    : {};
+  const readOnly = runtime.readOnly === true;
   const storageKey = "nationalHeritageVisits.v1";
   const provinceOrder = [
     "北京市", "天津市", "河北省", "山西省", "内蒙古自治区", "辽宁省", "吉林省", "黑龙江省",
@@ -12,14 +16,16 @@
   ];
   const periodOrder = [
     "史前", "夏商周", "秦汉", "魏晋南北朝", "隋唐五代", "宋辽金西夏",
-    "元", "明", "明清", "清", "近代", "现代", "近现代", "跨时期", "其他",
+    "元", "明", "清", "近代", "现代", "其他",
   ];
   const collator = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
+  const urlParams = new URLSearchParams(window.location.search);
+  const isStatisticsView = urlParams.get("view") === "stats";
 
   function classifyPeriod(era) {
     const value = String(era || "").replaceAll(" ", "");
     if (!value || /不详|未载|未知/.test(value)) return "其他";
-    if (/近现代/.test(value)) return "近现代";
+    if (/以前/.test(value)) return "其他";
 
     const groups = [
       ["史前", /旧石器|新石器|史前|更新世|古生代|旧石器时代|新石器时代/],
@@ -31,24 +37,17 @@
       ["元", /(?<!公)元/],
       ["明", /明/],
       ["清", /清/],
-      ["近代", /民国|近代/],
+      ["近代", /民国|近现代|近代/],
       ["现代", /中华人民共和国|现代|当代|至今/],
     ];
-    const matched = groups.filter(([, pattern]) => pattern.test(value)).map(([label]) => label);
-    const unique = [...new Set(matched)];
-    if (/以前/.test(value)) return "跨时期";
-    if (unique.length === 1) return unique[0];
-    if (unique.length === 2 && unique.includes("明") && unique.includes("清")) return "明清";
-    if (unique.length === 2 && unique.includes("近代") && unique.includes("现代")) return "近现代";
-    if (unique.length > 1) return "跨时期";
+    const earliestPeriod = groups.find(([, pattern]) => pattern.test(value));
+    if (earliestPeriod) return earliestPeriod[0];
 
     const years = [...value.matchAll(/(?<!公元前)(\d{3,4})年?/g)].map((match) => Number(match[1]));
     if (years.length) {
       const earliest = Math.min(...years);
-      const latest = Math.max(...years);
       if (earliest >= 1949) return "现代";
-      if (latest < 1949 && earliest >= 1840) return "近代";
-      if (earliest < 1840 && latest >= 1840) return "跨时期";
+      if (earliest >= 1840) return "近代";
     }
     return "其他";
   }
@@ -62,7 +61,9 @@
     status: "all",
     group: "province",
     batches: new Set([1, 2, 3, 4, 5, 6, 7, 8]),
-    province: "all",
+    province: isStatisticsView
+      ? "all"
+      : (provinceOrder.includes(urlParams.get("province")) ? urlParams.get("province") : "北京市"),
     category: "all",
     period: "all",
     includeMerged: false,
@@ -94,10 +95,13 @@
     resetFiltersButton: document.querySelector("#resetFiltersButton"),
     provinceProgress: document.querySelector("#provinceProgress"),
     resultCount: document.querySelector("#resultCount"),
+    resultPageTools: document.querySelector(".result-page-tools"),
     pageSizeSelect: document.querySelector("#pageSizeSelect"),
     previousPageButton: document.querySelector("#previousPageButton"),
     nextPageButton: document.querySelector("#nextPageButton"),
     pageIndicator: document.querySelector("#pageIndicator"),
+    pageJumpInput: document.querySelector("#pageJumpInput"),
+    pageJumpButton: document.querySelector("#pageJumpButton"),
     resultGroups: document.querySelector("#resultGroups"),
     pagination: document.querySelector("#pagination"),
     detailDialog: document.querySelector("#detailDialog"),
@@ -114,24 +118,66 @@
     exportJsonButton: document.querySelector("#exportJsonButton"),
     exportCsvButton: document.querySelector("#exportCsvButton"),
     clearRecordsButton: document.querySelector("#clearRecordsButton"),
+    recordsView: document.querySelector("#recordsView"),
+    statisticsView: document.querySelector("#statisticsView"),
+    recordsViewLink: document.querySelector("#recordsViewLink"),
+    statisticsViewLink: document.querySelector("#statisticsViewLink"),
+    dataMenu: document.querySelector(".data-menu"),
+    saveStatus: document.querySelector("#saveStatus"),
+    saveDetailButton: document.querySelector("#saveDetailButton"),
     toast: document.querySelector("#toast"),
   };
 
   let records = loadRecords();
+  let editorConnected = false;
+  let editorSaveQueue = Promise.resolve();
   let toastTimer = null;
   let searchTimer = null;
 
+  function sanitizeRecords(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+    const sanitized = {};
+    Object.entries(value).forEach(([id, record]) => {
+      if (!unitById.has(id) || !record || typeof record !== "object") return;
+      sanitized[id] = {
+        visited: Boolean(record.visited),
+        time: String(record.time || "").trim(),
+        notes: String(record.notes || "").trim(),
+      };
+    });
+    return sanitized;
+  }
+
   function loadRecords() {
+    if (readOnly) return sanitizeRecords(runtime.records);
     try {
       const value = JSON.parse(localStorage.getItem(storageKey) || "{}");
-      return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      return sanitizeRecords(value);
     } catch (error) {
       return {};
     }
   }
 
   function saveRecords() {
+    if (readOnly) return;
     localStorage.setItem(storageKey, JSON.stringify(records));
+    if (!editorConnected) return;
+    const payload = JSON.stringify({ version: 1, records });
+    elements.saveStatus.textContent = "正在保存…";
+    editorSaveQueue = editorSaveQueue
+      .catch(() => {})
+      .then(async () => {
+        const response = await fetch("/api/records", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        elements.saveStatus.textContent = "已自动保存到博客数据";
+      })
+      .catch(() => {
+        elements.saveStatus.textContent = "自动保存失败，请保留 JSON 备份";
+      });
   }
 
   function recordFor(id) {
@@ -139,6 +185,7 @@
   }
 
   function updateRecord(id, patch) {
+    if (readOnly) return;
     const next = { ...recordFor(id), ...patch };
     next.visited = Boolean(next.visited);
     next.time = String(next.time || "").trim();
@@ -182,6 +229,20 @@
   }
 
   function initializeControls() {
+    elements.recordsView.hidden = isStatisticsView;
+    elements.statisticsView.hidden = !isStatisticsView;
+    const currentViewLink = isStatisticsView ? elements.statisticsViewLink : elements.recordsViewLink;
+    currentViewLink.classList.add("active");
+    currentViewLink.setAttribute("aria-current", "page");
+    document.body.classList.toggle("read-only", readOnly);
+    elements.dataMenu.hidden = readOnly;
+    elements.clearRecordsButton.hidden = readOnly;
+    elements.dialogVisited.disabled = readOnly;
+    elements.dialogTime.readOnly = readOnly;
+    elements.dialogNotes.readOnly = readOnly;
+    elements.saveDetailButton.hidden = readOnly;
+    elements.saveStatus.textContent = readOnly ? "博客公开数据 · 只读" : "当前浏览器本地保存";
+
     elements.batchFilters.innerHTML = Array.from({ length: 8 }, (_, index) => {
       const batch = index + 1;
       return `<button type="button" class="batch-filter active" data-batch="${batch}" aria-pressed="true">${batch}</button>`;
@@ -192,6 +253,7 @@
       '<option value="all">全部省份</option>',
       ...provinces.map((province) => `<option value="${escapeHtml(province)}">${escapeHtml(province)}</option>`),
     ].join("");
+    elements.provinceFilter.value = state.province;
 
     const categories = [...new Set(units.map((unit) => unit.category))]
       .sort((a, b) => collator.compare(a, b));
@@ -218,7 +280,7 @@
     if (state.status === "visited" && !record.visited) return false;
     if (state.status === "unvisited" && record.visited) return false;
     if (state.query) {
-      const haystack = `${unit.name} ${unit.code} ${unit.location} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
+      const haystack = `${unit.name} ${unit.alias || ""} ${unit.code} ${unit.location} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
       if (!haystack.includes(state.query)) return false;
     }
     return true;
@@ -393,18 +455,21 @@
     const visitedClass = record.visited ? " visited-row" : "";
     const checked = record.visited ? " checked" : "";
     const merged = unit.kind === "merged" ? '<span class="merged-label">并入既有国保</span>' : "";
+    const alias = unit.alias ? `<span class="unit-alias">（${escapeHtml(unit.alias)}）</span>` : "";
     const noteClass = record.notes ? " has-note" : "";
+    const disabled = readOnly ? " disabled" : "";
+    const readonly = readOnly ? " readonly" : "";
     return `<tr class="${visitedClass.trim()}" data-id="${escapeHtml(unit.id)}">
-      <td class="col-check"><input class="visit-checkbox" type="checkbox" aria-label="标记到访：${escapeHtml(unit.name)}"${checked}></td>
+      <td class="col-check"><input class="visit-checkbox" type="checkbox" aria-label="标记到访：${escapeHtml(unit.name)}"${checked}${disabled}></td>
       <td class="col-name">
-        <button class="unit-name-button" type="button" data-action="detail">${escapeHtml(unit.name)}</button>
+        <button class="unit-name-button" type="button" data-action="detail">${escapeHtml(unit.name)}${alias}</button>
         ${merged}
       </td>
       <td class="col-batch"><span class="batch-badge">${unit.batch}</span></td>
-      <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.period)}</span><span class="unit-era">${escapeHtml(unit.era || "时代未载")}</span></td>
+      <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
       <td class="col-location">${escapeHtml(unit.location)}</td>
-      <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"></td>
-      <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">备注</button></td>
+      <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}></td>
+      <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">${readOnly ? "查看" : "备注"}</button></td>
     </tr>`;
   }
 
@@ -416,7 +481,7 @@
         <table class="heritage-table">
           <thead><tr>
             <th class="col-check">到访</th><th class="col-name">名称</th><th class="col-batch">批次</th>
-            <th class="col-category">类别 / 年代 / 时代</th><th class="col-location">地址</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
+            <th class="col-category">类别 / 年代</th><th class="col-location">地址</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
           </tr></thead>
           <tbody>${groupUnits.map(renderRow).join("")}</tbody>
         </table>
@@ -441,6 +506,7 @@
   }
 
   function renderResults() {
+    elements.resultPageTools.hidden = false;
     const filtered = sortedFilteredUnits();
     const pageCount = Math.max(1, Math.ceil(filtered.length / state.pageSize));
     state.page = Math.min(state.page, pageCount);
@@ -451,6 +517,8 @@
       ? `符合条件 ${formatNumber(filtered.length)} 项，当前 ${formatNumber(start + 1)}-${formatNumber(end)}`
       : "没有符合条件的项目";
     elements.pageIndicator.textContent = `${state.page} / ${filtered.length ? pageCount : 1}`;
+    elements.pageJumpInput.max = String(filtered.length ? pageCount : 1);
+    elements.pageJumpInput.value = String(state.page);
     elements.previousPageButton.disabled = state.page <= 1 || !filtered.length;
     elements.nextPageButton.disabled = state.page >= pageCount || !filtered.length;
 
@@ -501,7 +569,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    elements.allBatchesButton.textContent = state.batches.size === 8 ? "清除" : "全选";
+    elements.allBatchesButton.textContent = "全部";
   }
 
   function resetFilters() {
@@ -509,13 +577,13 @@
     state.status = "all";
     state.group = "province";
     state.batches = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
-    state.province = "all";
+    state.province = "北京市";
     state.category = "all";
     state.period = "all";
     state.includeMerged = false;
     state.page = 1;
     elements.searchInput.value = "";
-    elements.provinceFilter.value = "all";
+    elements.provinceFilter.value = "北京市";
     elements.categoryFilter.value = "all";
     elements.periodFilter.value = "all";
     elements.mergedToggle.checked = false;
@@ -535,10 +603,10 @@
     elements.dialogTitle.textContent = unit.name;
     const facts = [
       ["类别", unit.category, false],
-      ["年代分类", unit.period, false],
-      ["时代原文", unit.era || "未载", false],
+      ["年代", unit.period, false],
       ["地址", unit.location, true],
     ];
+    if (unit.alias) facts.splice(1, 0, ["别名", unit.alias, false]);
     if (unit.remark) facts.push(["备注", unit.remark, true]);
     elements.dialogFacts.innerHTML = facts.map(([label, value, wide]) =>
       `<div class="dialog-fact${wide ? " wide" : ""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
@@ -590,11 +658,11 @@
 
   function exportCsv() {
     const filtered = sortedFilteredUnits();
-    const headers = ["编号", "名称", "批次", "公布年份", "省份", "类别", "年代分类", "时代原文", "地址", "项目类型", "并入备注", "是否去过", "到访时间", "个人备注"];
+    const headers = ["编号", "名称", "别名", "批次", "公布年份", "省份", "类别", "年代", "地址", "项目类型", "并入备注", "是否去过", "到访时间", "个人备注"];
     const rows = filtered.map((unit) => {
       const record = recordFor(unit.id);
       return [
-        unit.code, unit.name, unit.batch, unit.year, unit.province, unit.category, unit.period, unit.era, unit.location,
+        unit.code, unit.name, unit.alias || "", unit.batch, unit.year, unit.province, unit.category, unit.period, unit.location,
         unit.kind === "unit" ? "独立国保" : "并入项目", unit.remark, record.visited ? "是" : "否", record.time, record.notes,
       ].map(csvCell).join(",");
     });
@@ -627,6 +695,22 @@
     }
   }
 
+  async function connectEditor() {
+    if (readOnly || !/^https?:$/.test(window.location.protocol) || !["127.0.0.1", "localhost"].includes(window.location.hostname)) return;
+    try {
+      const response = await fetch("/api/records", { cache: "no-store" });
+      if (!response.ok) return;
+      const payload = await response.json();
+      records = sanitizeRecords(payload.records || payload);
+      localStorage.setItem(storageKey, JSON.stringify(records));
+      editorConnected = true;
+      elements.saveStatus.textContent = "已连接本地编辑服务";
+      renderAll();
+    } catch (error) {
+      elements.saveStatus.textContent = "当前浏览器本地保存";
+    }
+  }
+
   function bindEvents() {
     elements.searchInput.addEventListener("input", () => {
       window.clearTimeout(searchTimer);
@@ -656,14 +740,21 @@
       const button = event.target.closest("button[data-batch]");
       if (!button) return;
       const batch = Number(button.dataset.batch);
-      if (state.batches.has(batch)) state.batches.delete(batch);
-      else state.batches.add(batch);
+      if (state.batches.size === 8) {
+        state.batches = new Set([batch]);
+      } else if (state.batches.size === 1 && state.batches.has(batch)) {
+        state.batches = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+      } else if (state.batches.has(batch)) {
+        state.batches.delete(batch);
+      } else {
+        state.batches.add(batch);
+      }
       syncBatchButtons();
       resetPageAndRender();
     });
 
     elements.allBatchesButton.addEventListener("click", () => {
-      state.batches = state.batches.size === 8 ? new Set() : new Set([1, 2, 3, 4, 5, 6, 7, 8]);
+      state.batches = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
       syncBatchButtons();
       resetPageAndRender();
     });
@@ -705,6 +796,10 @@
     elements.provinceProgress.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-province]");
       if (!button) return;
+      if (isStatisticsView) {
+        window.location.href = `./index.html?province=${encodeURIComponent(button.dataset.province)}`;
+        return;
+      }
       state.province = state.province === button.dataset.province ? "all" : button.dataset.province;
       elements.provinceFilter.value = state.province;
       renderProvinceProgress();
@@ -754,6 +849,22 @@
       resetPageAndRender();
     });
 
+    function jumpToPage() {
+      const pageCount = Math.max(1, Math.ceil(sortedFilteredUnits().length / state.pageSize));
+      const requested = Number.parseInt(elements.pageJumpInput.value, 10);
+      if (!Number.isFinite(requested)) return;
+      state.page = Math.min(pageCount, Math.max(1, requested));
+      renderResults();
+      document.querySelector(".result-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    elements.pageJumpButton.addEventListener("click", jumpToPage);
+    elements.pageJumpInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") return;
+      event.preventDefault();
+      jumpToPage();
+    });
+
     elements.detailForm.addEventListener("submit", (event) => {
       if (event.submitter && event.submitter.value === "cancel") return;
       event.preventDefault();
@@ -761,17 +872,30 @@
       elements.detailDialog.close();
     });
 
-    elements.importButton.addEventListener("click", () => elements.importFile.click());
+    elements.importButton.addEventListener("click", () => {
+      elements.dataMenu.open = false;
+      elements.importFile.click();
+    });
     elements.importFile.addEventListener("change", () => {
       if (elements.importFile.files[0]) importJson(elements.importFile.files[0]);
     });
-    elements.exportJsonButton.addEventListener("click", exportJson);
-    elements.exportCsvButton.addEventListener("click", exportCsv);
+    elements.exportJsonButton.addEventListener("click", () => {
+      elements.dataMenu.open = false;
+      exportJson();
+    });
+    elements.exportCsvButton.addEventListener("click", () => {
+      elements.dataMenu.open = false;
+      exportCsv();
+    });
+
+    document.addEventListener("click", (event) => {
+      if (elements.dataMenu.open && !elements.dataMenu.contains(event.target)) elements.dataMenu.open = false;
+    });
 
     elements.clearRecordsButton.addEventListener("click", () => {
       if (!window.confirm("确定清空全部个人到访记录吗？此操作只能通过此前导出的备份恢复。")) return;
       records = {};
-      localStorage.removeItem(storageKey);
+      saveRecords();
       renderAll();
       showToast("个人记录已清空");
     });
@@ -780,4 +904,5 @@
   initializeControls();
   bindEvents();
   renderAll();
+  connectEditor();
 })();

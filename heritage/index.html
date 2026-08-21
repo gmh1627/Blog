@@ -4,18 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>国保足迹 - 全国重点文物保护单位到访记录</title>
+  <title>第一至第八批全国重点文物保护单位寻访足迹</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./data/runtime.js" defer></script>
   <script src="./data/divisions.js" defer></script>
   <script src="./data/units.js" defer></script>
+  <script src="./data/encyclopedia-links.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
 <body>
   <header class="app-header">
     <div>
-      <p class="eyebrow">第一至第八批</p>
-      <h1>国保足迹</h1>
+      <p class="eyebrow">第一至第八批全国重点文物保护单位</p>
+      <h1>寻访足迹</h1>
     </div>
     <div class="header-actions">
       <nav class="view-nav" aria-label="页面导航">
@@ -165,30 +166,20 @@
       <section class="results" aria-label="文物保护单位列表">
         <div class="result-toolbar">
           <p id="resultCount" aria-live="polite"></p>
+          <label class="result-page-size">
+            每页
+            <select id="pageSizeSelect">
+              <option value="20" selected>20</option>
+              <option value="50">50</option>
+              <option value="100">100</option>
+            </select>
+            项
+          </label>
         </div>
 
         <div id="resultGroups"></div>
         <div class="result-footer">
           <nav class="pagination" id="pagination" aria-label="翻页"></nav>
-          <div class="result-page-tools">
-            <label>
-              每页
-              <select id="pageSizeSelect">
-                <option value="20" selected>20</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
-            </label>
-            <button id="previousPageButton" class="page-step" type="button" aria-label="上一页" title="上一页">‹</button>
-            <span id="pageIndicator" class="page-indicator">1 / 1</span>
-            <button id="nextPageButton" class="page-step" type="button" aria-label="下一页" title="下一页">›</button>
-            <label class="page-jump">
-              前往
-              <input id="pageJumpInput" type="number" min="1" step="1" inputmode="numeric" aria-label="跳转页码">
-              页
-            </label>
-            <button id="pageJumpButton" class="button secondary page-jump-button" type="button">跳转</button>
-          </div>
         </div>
       </section>
     </div>
@@ -217,7 +208,6 @@
         <textarea id="dialogNotes" rows="4" placeholder="行程、同行者、开放情况等"></textarea>
       </label>
       <div class="dialog-actions">
-        <a id="dialogSource" class="source-link" target="_blank" rel="noreferrer">查看名单来源</a>
         <button class="button primary" id="saveDetailButton" value="default" type="submit">保存记录</button>
       </div>
     </form>

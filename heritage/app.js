@@ -155,13 +155,7 @@
     resetFiltersButton: document.querySelector("#resetFiltersButton"),
     provinceProgress: document.querySelector("#provinceProgress"),
     resultCount: document.querySelector("#resultCount"),
-    resultPageTools: document.querySelector(".result-page-tools"),
     pageSizeSelect: document.querySelector("#pageSizeSelect"),
-    previousPageButton: document.querySelector("#previousPageButton"),
-    nextPageButton: document.querySelector("#nextPageButton"),
-    pageIndicator: document.querySelector("#pageIndicator"),
-    pageJumpInput: document.querySelector("#pageJumpInput"),
-    pageJumpButton: document.querySelector("#pageJumpButton"),
     resultGroups: document.querySelector("#resultGroups"),
     pagination: document.querySelector("#pagination"),
     detailDialog: document.querySelector("#detailDialog"),
@@ -172,7 +166,6 @@
     dialogVisited: document.querySelector("#dialogVisited"),
     dialogTime: document.querySelector("#dialogTime"),
     dialogNotes: document.querySelector("#dialogNotes"),
-    dialogSource: document.querySelector("#dialogSource"),
     importButton: document.querySelector("#importButton"),
     importFile: document.querySelector("#importFile"),
     exportJsonButton: document.querySelector("#exportJsonButton"),
@@ -727,7 +720,9 @@
     const visitedClass = record.visited ? " visited-row" : "";
     const checked = record.visited ? " checked" : "";
     const alias = unit.alias ? `<span class="unit-alias">（${escapeHtml(unit.alias)}）</span>` : "";
-    const noteClass = record.notes ? " has-note" : "";
+    const noteClass = record.notes ? " has-note" : " empty";
+    const noteText = record.notes || "—";
+    const noteTitle = record.notes ? ` title="${escapeHtml(record.notes)}"` : "";
     const disabled = readOnly ? " disabled" : "";
     const readonly = readOnly ? " readonly" : "";
     return `<tr class="${visitedClass.trim()}" data-id="${escapeHtml(unit.id)}">
@@ -736,12 +731,12 @@
         <button class="unit-name-button" type="button" data-action="detail">${escapeHtml(unit.name)}${alias}</button>
       </td>
       <td class="col-batch"><span class="batch-badge">${unit.batch}</span></td>
-      <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
+      <td class="col-category"><span class="category-label">${escapeHtml(unit.category)}</span><span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
       <td class="col-location">
         <span class="location-current">${escapeHtml(formatLocation(unit))}</span>
       </td>
       <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}></td>
-      <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">${readOnly ? "查看" : "备注"}</button></td>
+      <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail"${noteTitle}>${escapeHtml(noteText)}</button></td>
     </tr>`;
   }
 
@@ -753,7 +748,7 @@
         <table class="heritage-table">
           <thead><tr>
             <th class="col-check">到访</th><th class="col-name">名称</th><th class="col-batch">批次</th>
-            <th class="col-category">类别 / 年代</th><th class="col-location">行政区划</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
+            <th class="col-category">类别 / 年代</th><th class="col-location">行政区划</th><th class="col-time">到访时间</th><th class="col-actions">备注</th>
           </tr></thead>
           <tbody>${groupUnits.map(renderRow).join("")}</tbody>
         </table>
@@ -774,11 +769,12 @@
       parts.push(`<button type="button" data-page="${page}" class="${page === state.page ? "active" : ""}" ${page === state.page ? 'aria-current="page"' : ""}>${page}</button>`);
     });
     parts.push(`<button type="button" data-page="${state.page + 1}" ${state.page === pageCount ? "disabled" : ""}>下一页</button>`);
+    parts.push(`<label class="page-jump">前往 <input class="page-jump-input" type="number" min="1" max="${pageCount}" step="1" value="${state.page}" inputmode="numeric" aria-label="跳转页码"> 页</label>`);
+    parts.push('<button class="page-jump-button" type="button" data-action="jump-page">跳转</button>');
     elements.pagination.innerHTML = parts.join("");
   }
 
   function renderResults() {
-    elements.resultPageTools.hidden = false;
     const filtered = sortedFilteredUnits();
     const pageCount = Math.max(1, Math.ceil(filtered.length / state.pageSize));
     state.page = Math.min(state.page, pageCount);
@@ -791,12 +787,6 @@
     elements.resultCount.textContent = filtered.length
       ? `符合条件 ${formatNumber(filtered.length)} 项，当前 ${formatNumber(start + 1)}-${formatNumber(end)}${visitTimeLabel}`
       : `没有符合条件的项目${visitTimeLabel}`;
-    elements.pageIndicator.textContent = `${state.page} / ${filtered.length ? pageCount : 1}`;
-    elements.pageJumpInput.max = String(filtered.length ? pageCount : 1);
-    elements.pageJumpInput.value = String(state.page);
-    elements.previousPageButton.disabled = state.page <= 1 || !filtered.length;
-    elements.nextPageButton.disabled = state.page >= pageCount || !filtered.length;
-
     if (!pageUnits.length) {
       elements.resultGroups.innerHTML = '<div class="empty-state">没有符合条件的项目</div>';
       renderPagination(0);
@@ -886,13 +876,24 @@
     ];
     if (unit.alias) facts.splice(1, 0, ["别名", unit.alias, false]);
     if (unit.remark) facts.push(["备注", unit.remark, true]);
-    elements.dialogFacts.innerHTML = facts.map(([label, value, wide]) =>
+    const factHtml = facts.map(([label, value, wide]) =>
       `<div class="dialog-fact${wide ? " wide" : ""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
     ).join("");
+    const encyclopediaLinks = window.HERITAGE_ENCYCLOPEDIA_LINKS?.[unit.id] || {};
+    const preferredEncyclopedia = encyclopediaLinks.baidu || encyclopediaLinks.wikipedia;
+    const encyclopediaLabel = encyclopediaLinks.baidu ? "百度百科" : "维基百科";
+    const linkHtml = preferredEncyclopedia
+      ? `<a class="encyclopedia-link primary" href="${escapeHtml(preferredEncyclopedia.url)}" target="_blank" rel="noreferrer">${encyclopediaLabel}：${escapeHtml(preferredEncyclopedia.title)}</a>`
+      : "";
+    const encyclopediaHtml = linkHtml ? `
+      <div class="dialog-fact wide encyclopedia-fact">
+        <span>简介</span>
+        <strong>${linkHtml}</strong>
+      </div>` : "";
+    elements.dialogFacts.innerHTML = `${factHtml}${encyclopediaHtml}`;
     elements.dialogVisited.checked = options.visited ?? record.visited;
     elements.dialogTime.value = record.time;
     elements.dialogNotes.value = record.notes;
-    elements.dialogSource.href = unit.source;
     if (typeof elements.detailDialog.showModal === "function") elements.detailDialog.showModal();
     if (options.focusTime) elements.dialogTime.focus();
   }
@@ -1156,22 +1157,17 @@
     });
 
     elements.pagination.addEventListener("click", (event) => {
+      const jumpButton = event.target.closest('button[data-action="jump-page"]');
+      if (jumpButton) {
+        jumpToPage();
+        return;
+      }
       const button = event.target.closest("button[data-page]");
       if (!button || button.disabled) return;
       state.page = Number(button.dataset.page);
       renderResults();
       document.querySelector(".result-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
     });
-
-    function stepPage(direction) {
-      const pageCount = Math.max(1, Math.ceil(sortedFilteredUnits().length / state.pageSize));
-      state.page = Math.min(pageCount, Math.max(1, state.page + direction));
-      renderResults();
-      document.querySelector(".result-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    elements.previousPageButton.addEventListener("click", () => stepPage(-1));
-    elements.nextPageButton.addEventListener("click", () => stepPage(1));
 
     elements.pageSizeSelect.addEventListener("change", () => {
       state.pageSize = Number(elements.pageSizeSelect.value);
@@ -1180,16 +1176,17 @@
 
     function jumpToPage() {
       const pageCount = Math.max(1, Math.ceil(sortedFilteredUnits().length / state.pageSize));
-      const requested = Number.parseInt(elements.pageJumpInput.value, 10);
+      const input = elements.pagination.querySelector(".page-jump-input");
+      if (!input) return;
+      const requested = Number.parseInt(input.value, 10);
       if (!Number.isFinite(requested)) return;
       state.page = Math.min(pageCount, Math.max(1, requested));
       renderResults();
       document.querySelector(".result-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    elements.pageJumpButton.addEventListener("click", jumpToPage);
-    elements.pageJumpInput.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
+    elements.pagination.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" || !event.target.matches(".page-jump-input")) return;
       event.preventDefault();
       jumpToPage();
     });

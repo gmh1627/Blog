@@ -95,6 +95,9 @@ NAME_OVERRIDES = {
     "楡林窟": ("榆林窟", ""),
     "飞来峰造象": ("飞来峰造像", ""),
     "石𱵄村冯氏祠堂": ("石矍村冯氏祠堂", ""),
+    "南敢东岳庙": ("南撖东岳庙", ""),
+    "征邑漕仓遗址": ("澂邑漕仓遗址", ""),
+    "尚稽陈玉𤩱祠": ("尚稽陈玉壂祠", ""),
     "𥒚州灯塔": ("硇洲灯塔", ""),
     "𰻮阳城遗址": ("枭阳城遗址", ""),
     "重修护国寺感应塔碑（西夏碑）": ("重修护国寺感应塔碑", ""),
@@ -133,6 +136,7 @@ CURRENT_LOCATION_OVERRIDES = {
     "1-0039-4-006": ("甘肃省", "临夏回族自治州", "永靖县"),
     "1-0058-3-011": ("河北省", "石家庄市", "赵县"),
     "1-0060-3-013": ("河北省", "石家庄市", "赵县"),
+    "7-1895-5-288": ("贵州省", "遵义市", "播州区"),
     "1-0069-3-022": ("河南省", "开封市", "顺河回族区"),
     "1-0077-3-030": ("河北省", "保定市", "定兴县"),
     "1-0078-3-031": ("河北省", "石家庄市", "赵县"),
@@ -146,6 +150,17 @@ CURRENT_LOCATION_OVERRIDES = {
     "1-0144-1-009": ("山东省", "淄博市", "临淄区"),
     "1-0169-2-008": ("河北省", "衡水市", "景县"),
     "1-0176-2-015": ("浙江省", "杭州市", "西湖区"),
+    "1-0177-2-016": ("江苏省", "南京市", "玄武区"),
+    "4-0003-1-003": ("湖北省", "荆州市", "荆州区"),
+    "4-0062-2-006": ("吉林省", "吉林市", "丰满区"),
+    "5-0044-1-044": ("安徽省", "宣城市", "宣州区"),
+    "5-0113-1-113": ("陕西省", "西安市", "临潼区"),
+    "5-0183-2-039": (
+        "陕西省", "跨地级行政区", "跨县级行政区", "陕西省 · 西安市、咸阳市",
+    ),
+    "6-0525-3-228": ("江苏省", "无锡市", "新吴区"),
+    "6-0539-3-242": ("浙江省", "宁波市", "海曙区"),
+    "6-0650-3-353": ("河南省", "洛阳市", "老城区"),
     "2-0029-3-014": ("北京市", "北京市", "东城区"),
     "2-0035-3-020": ("北京市", "北京市", "东城区"),
     "3-0003-5-003": ("江苏省", "南京市", "秦淮区"),
@@ -167,6 +182,7 @@ CURRENT_LOCATION_OVERRIDES = {
     "5-0339-3-145": ("河南省", "开封市", "龙亭区"),
     "5-0447-4-005": ("江苏省", "南京市", "栖霞区"),
     "6-0175-1-175": ("海南省", "三沙市", "西沙区"),
+    "6-0174-1-174": ("海南省", "三沙市", "西沙区"),
     "6-0272-2-052": ("海南省", "三亚市", "海棠区"),
     "6-0474-3-177": ("山西省", "长治市", "潞州区"),
     "6-0654-3-357": ("河南省", "开封市", "顺河回族区"),
@@ -280,6 +296,13 @@ CURRENT_LOCATION_OVERRIDES = {
     "merge-6-098": ("四川省", "广安市", "广安区"),
     "merge-6-100": ("四川省", "泸州市", "江阳区"),
 }
+
+reviewed_location_path = DATA_DIR / "location-overrides.json"
+if reviewed_location_path.exists():
+    reviewed_locations = json.loads(reviewed_location_path.read_text(encoding="utf-8"))
+    if not all(isinstance(values, list) and len(values) in {3, 4} for values in reviewed_locations.values()):
+        raise ValueError("location-overrides.json contains an invalid location tuple")
+    CURRENT_LOCATION_OVERRIDES.update({key: tuple(values) for key, values in reviewed_locations.items()})
 
 MUNICIPALITIES = {"北京市", "天津市", "上海市", "重庆市"}
 GENERIC_PREFECTURE_LABELS = {
@@ -561,9 +584,11 @@ def load_admin_divisions(session: requests.Session) -> dict:
 
     aliases = defaultdict(set)
     alias_context = defaultdict(lambda: defaultdict(set))
+    current_alias_context = defaultdict(lambda: defaultdict(set))
     for code, location in counties_by_code.items():
         aliases[location["district"]].add(code)
         alias_context[location["district"]][location["province"]].add(code)
+        current_alias_context[location["district"]][location["province"]].add(code)
     for row in county_rows:
         name = clean(row["名称"])
         aliases[name]
@@ -605,6 +630,7 @@ def load_admin_divisions(session: requests.Session) -> dict:
         "counties_by_code": counties_by_code,
         "aliases": aliases,
         "alias_context": alias_context,
+        "current_alias_context": current_alias_context,
         "alias_names": alias_names,
         "prefectures": prefectures,
         "direct_prefectures": direct_prefectures,
@@ -699,10 +725,16 @@ def resolve_current_location(
     ]
     source_province = clean(original_province) or primary_province(notice_location)
     notice_province = primary_province(notice_location)
+    notice_county_aliases = [
+        alias
+        for alias in admin["alias_names"]
+        if alias in notice_location and admin["alias_context"][alias].get(notice_province)
+    ]
     notice_cities = [
         city
         for city in admin["prefectures"].get(notice_province, set())
         if city in notice_location
+        and not any(city in alias and len(alias) > len(city) for alias in notice_county_aliases)
     ]
     notice_city = notice_cities[0] if len(notice_cities) == 1 else ""
     hints = [
@@ -729,6 +761,47 @@ def resolve_current_location(
             "district": "跨县级行政区",
             "current_location": "、".join(provinces),
         }
+
+    # Notices for site groups often enumerate several present or historical
+    # counties. Resolve the complete set before consulting the KML's single
+    # representative point, which otherwise drops all but one location.
+    if re.search(r"[、，,及和]", notice_location):
+        explicit_codes = set()
+        matched_aliases = [
+            alias for alias in admin["alias_names"]
+            if alias in notice_location and alias not in admin["all_prefecture_names"]
+        ]
+        matched_aliases = [
+            alias for alias in matched_aliases
+            if not any(alias in longer and len(longer) > len(alias) for longer in matched_aliases)
+        ]
+        for alias in matched_aliases:
+            contextual = (
+                admin["current_alias_context"][alias].get(notice_province, set())
+                or admin["alias_context"][alias].get(notice_province, set())
+            )
+            if len(notice_cities) == 1:
+                contextual = {
+                    code for code in contextual
+                    if admin["counties_by_code"][code]["city"] == notice_cities[0]
+                } or contextual
+            explicit_codes.update(contextual)
+        explicit_location = summarize_locations(explicit_codes, admin)
+        explicit_cities = set(notice_cities)
+        if explicit_location:
+            if explicit_location["city"] == "跨地级行政区":
+                explicit_cities.update(explicit_location["current_location"].split(" · ")[-1].split("、"))
+            elif explicit_location["city"] not in DIRECT_COUNTY_PREFECTURE_LABELS:
+                explicit_cities.add(explicit_location["city"])
+        if len(explicit_cities) > 1:
+            return {
+                "province": notice_province,
+                "city": "跨地级行政区",
+                "district": "跨县级行政区",
+                "current_location": f'{notice_province} · {"、".join(sorted(explicit_cities))}',
+            }
+        if explicit_location:
+            return explicit_location
 
     for hint, province_context, city_context in hints:
         if not hint:
@@ -760,8 +833,9 @@ def resolve_current_location(
                 if region_base(admin["counties_by_code"][code]["city"]) == city_base
                 or admin["counties_by_code"][code]["city"] in city_context
             }
-            if city_codes:
-                codes = city_codes
+            if not city_codes:
+                continue
+            codes = city_codes
         resolved = summarize_locations(codes, admin)
         if resolved:
             return resolved

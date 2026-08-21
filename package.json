@@ -7,6 +7,7 @@
     "clean": "hexo clean",
     "deploy": "hexo deploy",
     "heritage": "node \"./heritage/scripts/editor_server.mjs\"",
+    "heritage:links": "node \"./heritage/scripts/verify_encyclopedia_links.mjs\"",
     "predeploy:all": "node \"./heritage/scripts/prepare_publish.mjs\"",
     "deploy:all": "hexo clean && hexo generate && hexo deploy && python blog_stat.py && hexo clean && hexo generate && hexo deploy && git add . && git commit -m \"commit\" && git push origin main",
     "server": "hexo server"

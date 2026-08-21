@@ -168,11 +168,35 @@ function unique(values) {
   return [...new Set(values.filter((value) => value && !String(value).startsWith('跨')))].sort((a, b) => a.localeCompare(b, 'zh-CN'));
 }
 
-function aggregateLocation(root) {
-  const members = [...root.baseUnits, ...root.mergedUnits];
+const municipalities = new Set(['北京市', '天津市', '上海市', '重庆市']);
+const directCountyLabels = new Set(['省直辖县级行政区', '自治区直辖县级行政区']);
+
+function cityEntries(unit, province) {
+  if (unit.province !== province) return [];
+  if (String(unit.city || '').startsWith('跨')) {
+    const values = String(unit.current_location || '').split(' · ')[1] || '';
+    return values.split('、').filter(Boolean).map((city) => ({ key: city, internal: city, display: city }));
+  }
+  if (municipalities.has(province) && unit.city === province) {
+    return [{ key: province, internal: province, display: province }];
+  }
+  if (directCountyLabels.has(unit.city)) {
+    return [{ key: unit.district, internal: unit.city, display: unit.district }];
+  }
+  return unit.city ? [{ key: unit.city, internal: unit.city, display: unit.city }] : [];
+}
+
+function locationText(province, city, district) {
+  const parts = [province];
+  if (city && city !== province && !directCountyLabels.has(city)) parts.push(city);
+  if (district && district !== '不设县级行政区') parts.push(district);
+  return parts.join(' · ');
+}
+
+function aggregateLocation(root, members) {
   const provinces = unique(members.flatMap((unit) => {
-    const first = String(unit.current_location || unit.province || '').split(' · ')[0];
-    return first.split('、');
+    if (!String(unit.province || '').startsWith('跨')) return [unit.province];
+    return String(unit.current_location || '').split('、');
   }));
   if (provinces.length > 1) {
     return {
@@ -182,43 +206,44 @@ function aggregateLocation(root) {
   }
 
   const province = provinces[0] || root.unit.province;
-  const cities = unique(members.flatMap((unit) => {
-    if (unit.province !== province && !String(unit.current_location || '').startsWith(province)) return [];
-    const parts = String(unit.current_location || '').split(' · ');
-    return (parts[1] || unit.city || '').split('、');
-  }));
-  if (cities.length > 1) {
+  const cityMap = new Map();
+  members.flatMap((unit) => cityEntries(unit, province)).forEach((entry) => cityMap.set(entry.key, entry));
+  const cityItems = [...cityMap.values()].sort((a, b) => a.display.localeCompare(b.display, 'zh-CN'));
+  if (cityItems.length > 1) {
     return {
       province, city: '跨地级行政区', district: '跨县级行政区',
-      current_location: `${province} · ${cities.join('、')}`,
+      current_location: `${province} · ${cityItems.map((entry) => entry.display).join('、')}`,
     };
   }
 
-  const city = cities[0] || root.unit.city;
+  const cityItem = cityItems[0] || { key: root.unit.city, internal: root.unit.city, display: root.unit.city };
+  const city = cityItem.internal;
   const districts = unique(members.flatMap((unit) => {
+    if (!cityEntries(unit, province).some((entry) => entry.key === cityItem.key)) return [];
+    if (!String(unit.district || '').startsWith('跨')) return [unit.district];
     const parts = String(unit.current_location || '').split(' · ');
-    const rowCity = parts[1] || unit.city || '';
-    if (rowCity !== city && unit.city !== city) return [];
-    return (parts[2] || unit.district || '').split('、');
+    const value = municipalities.has(province) || directCountyLabels.has(unit.city) ? parts[1] : parts[2];
+    return String(value || '').split('、');
   }));
   if (districts.length > 1) {
     return {
       province, city, district: '跨县级行政区',
-      current_location: `${province} · ${city} · ${districts.join('、')}`,
+      current_location: locationText(province, city, districts.join('、')),
     };
   }
   const district = districts[0] || root.unit.district;
   return {
     province, city, district,
-    current_location: [province, city, district]
-      .filter((value) => value && value !== '不设县级行政区')
-      .join(' · '),
+    current_location: locationText(province, city, district),
   };
 }
 
 const canonicalUnits = [...roots.values()].map((root) => {
   const orderedBases = root.baseUnits.slice().sort((a, b) => a.batch - b.batch || a.id.localeCompare(b.id));
   const seed = orderedBases[0] || root.unit;
+  const locationMembers = root.currentName !== seed.name || root.baseUnits.length > 1
+    ? [...root.baseUnits, ...root.mergedUnits]
+    : [seed];
   const recordIds = unique([
     root.id,
     ...root.baseUnits.map((unit) => unit.id),
@@ -232,7 +257,7 @@ const canonicalUnits = [...roots.values()].map((root) => {
     alias: '',
     batch: seed.batch,
     year: batchYears.get(seed.batch),
-    ...aggregateLocation(root),
+    ...aggregateLocation(root, locationMembers),
     kind: 'unit',
     remark: seed.remark === '增补项目' ? seed.remark : '',
     record_ids: recordIds,

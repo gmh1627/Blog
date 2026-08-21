@@ -245,6 +245,19 @@ summary:focus-visible {
   font-weight: 650;
 }
 
+.stat-link {
+  color: inherit;
+  text-decoration: none;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.stat-link:hover,
+.stat-link:focus-visible {
+  color: var(--green);
+  background: var(--green-soft);
+  outline-offset: -3px;
+}
+
 .control-band {
   padding: 14px clamp(20px, 4vw, 64px);
   display: grid;
@@ -368,13 +381,14 @@ textarea {
   width: min(1480px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(360px, 1.35fr) minmax(300px, 1fr) minmax(300px, 1fr);
+  grid-template-columns: minmax(420px, 1.25fr) minmax(340px, 1fr);
+  align-items: stretch;
   gap: 12px;
 }
 
 .chart-panel {
   min-width: 0;
-  min-height: 284px;
+  min-height: 0;
   padding: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
@@ -421,6 +435,22 @@ textarea {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  background: transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.timeline-point:hover .timeline-bar,
+.timeline-point:focus-visible .timeline-bar {
+  background: var(--red);
+}
+
+.timeline-point:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 3px;
 }
 
 .timeline-point strong {
@@ -461,6 +491,24 @@ textarea {
   grid-template-columns: 50px minmax(60px, 1fr) 70px;
   align-items: center;
   gap: 8px;
+}
+
+.chart-row-link {
+  margin: 0 -4px;
+  padding: 4px;
+  border-radius: 3px;
+  text-decoration: none;
+}
+
+.chart-row-link:hover,
+.chart-row-link:focus-visible {
+  background: #eef1ed;
+  outline: none;
+}
+
+.chart-row-link:hover .bar-fill,
+.chart-row-link:focus-visible .bar-fill {
+  background: var(--red);
 }
 
 .horizontal-row.category-row {
@@ -519,7 +567,146 @@ textarea {
 }
 
 .chart-empty.compact-empty {
-  min-height: 210px;
+  min-height: 142px;
+}
+
+.distribution-chart {
+  min-height: 0;
+}
+
+.distribution-figure {
+  display: grid;
+  grid-template-columns: 142px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.donut-chart {
+  width: 142px;
+  height: 142px;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.donut-chart circle {
+  cursor: pointer;
+  transition: opacity 140ms ease, stroke-width 140ms ease;
+}
+
+.donut-chart circle:hover {
+  opacity: 0.78;
+  stroke-width: 25;
+}
+
+.donut-chart text {
+  fill: var(--ink);
+  font-family: "Bahnschrift", "Segoe UI", var(--font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.donut-chart .donut-caption {
+  fill: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 6px;
+  font-weight: 500;
+}
+
+.distribution-legend {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 7px 12px;
+}
+
+.category-callout-chart {
+  width: 100%;
+  height: 203px;
+  display: block;
+  overflow: visible;
+}
+
+.category-callout-chart circle {
+  cursor: pointer;
+  transition: opacity 140ms ease;
+}
+
+.category-callout-chart polyline {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke-width 140ms ease;
+}
+
+.category-callout-chart text {
+  fill: #45554e;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.category-callout-chart .callout-count {
+  fill: var(--ink);
+  font-family: "Bahnschrift", "Segoe UI", var(--font-sans);
+  font-weight: 700;
+}
+
+.category-callout-chart a:hover circle,
+.category-callout-chart a:focus circle {
+  opacity: 0.76;
+}
+
+.category-callout-chart a:hover polyline,
+.category-callout-chart a:focus polyline {
+  stroke-width: 2;
+}
+
+.category-callout-chart a:hover text,
+.category-callout-chart a:focus text {
+  fill: var(--ink);
+}
+
+.distribution-legend-item {
+  min-width: 0;
+  min-height: 28px;
+  display: grid;
+  grid-template-columns: 11px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 3px;
+  border-radius: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.distribution-legend-item:hover,
+.distribution-legend-item:focus-visible {
+  color: var(--ink);
+  background: #eef1ed;
+  outline: none;
+}
+
+.distribution-legend-item > span:nth-child(2) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distribution-legend-item strong {
+  color: var(--ink);
+  font-family: "Bahnschrift", "Segoe UI", var(--font-sans);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.distribution-swatch {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
 }
 
 .workspace {
@@ -690,6 +877,11 @@ input[role="switch"]:checked::after {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.province-progress-button.has-visits span {
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .province-progress-button small {
@@ -1207,10 +1399,6 @@ footer {
     grid-template-columns: 1fr 1fr;
   }
 
-  .timeline-panel {
-    grid-column: 1 / -1;
-  }
-
   .province-progress-grid {
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
@@ -1308,8 +1496,21 @@ footer {
   }
 
   .chart-panel {
-    min-height: 270px;
     padding: 14px;
+  }
+
+  .distribution-figure {
+    grid-template-columns: 122px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .donut-chart {
+    width: 122px;
+    height: 122px;
+  }
+
+  .distribution-legend {
+    grid-template-columns: 1fr;
   }
 
   .header-actions .button {

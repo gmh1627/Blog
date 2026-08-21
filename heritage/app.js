@@ -2,7 +2,11 @@
   "use strict";
 
   const units = Array.isArray(window.HERITAGE_UNITS) ? window.HERITAGE_UNITS : [];
+  const divisions = window.HERITAGE_DIVISIONS && typeof window.HERITAGE_DIVISIONS === "object"
+    ? window.HERITAGE_DIVISIONS
+    : {};
   const unitById = new Map(units.map((unit) => [unit.id, unit]));
+  const recordIdSet = new Set(units.flatMap((unit) => unit.record_ids || [unit.id]));
   const runtime = window.HERITAGE_RUNTIME && typeof window.HERITAGE_RUNTIME === "object"
     ? window.HERITAGE_RUNTIME
     : {};
@@ -22,16 +26,24 @@
   const collator = new Intl.Collator("zh-CN", { numeric: true, sensitivity: "base" });
   const urlParams = new URLSearchParams(window.location.search);
   const isStatisticsView = urlParams.get("view") === "stats";
+  const requestedBatch = Number(urlParams.get("batch"));
+  const requestedVisitYear = Number(urlParams.get("visitYear"));
+  const requestedVisitMonth = Number(urlParams.get("visitMonth"));
+  const requestedStatus = urlParams.get("status");
+  const requestedGroup = urlParams.get("group");
 
   function classifyPeriod(era, name = "") {
     if (["京杭大运河", "大运河"].includes(name)) return "隋唐五代";
+    if (name === "长城") return "其他";
+    if (["高昌故城", "雅尔湖故城"].includes(name)) return "魏晋南北朝";
+    if (name === "林则徐销烟池与虎门炮台旧址") return "近代";
     const value = String(era || "").replaceAll(" ", "");
     if (!value || /不详|未载|未知/.test(value)) return "其他";
     if (/以前/.test(value)) return "其他";
 
     const groups = [
-      ["史前", /旧石器|新石器|史前|更新世|古生代|旧石器时代|新石器时代/],
-      ["夏商周", /先秦|(?<!西)夏|商|西周|东周|(?<!北|后)周|春秋|战国|青铜时代/],
+      ["史前", /旧石器|新石器|史前|更新世|古生代|远古/],
+      ["夏商周", /先秦|(?<!西)夏|商|殷|西周|东周|(?<!北|后)周|春秋|战国|青铜时代/],
       ["秦汉", /秦|汉|新莽/],
       ["魏晋南北朝", /三国|魏|晋|十六国|南北朝|南朝|北朝|北魏|东魏|西魏|北齐|北周|高句丽/],
       ["隋唐五代", /隋|唐|五代|后周|吐蕃|南诏|渤海/],
@@ -45,12 +57,43 @@
     const earliestPeriod = groups.find(([, pattern]) => pattern.test(value));
     if (earliestPeriod) return earliestPeriod[0];
 
-    const years = [...value.matchAll(/(?<!公元前)(\d{3,4})年?/g)].map((match) => Number(match[1]));
-    if (years.length) {
-      const earliest = Math.min(...years);
-      if (earliest >= 1949) return "现代";
-      if (earliest >= 1840) return "近代";
+    const periodForYear = (year) => {
+      if (year <= -2071) return "史前";
+      if (year <= -222) return "夏商周";
+      if (year <= 219) return "秦汉";
+      if (year <= 580) return "魏晋南北朝";
+      if (year <= 959) return "隋唐五代";
+      if (year <= 1270) return "宋辽金西夏";
+      if (year <= 1367) return "元";
+      if (year <= 1643) return "明";
+      if (year <= 1839) return "清";
+      if (year <= 1948) return "近代";
+      return "现代";
+    };
+    const chineseNumber = (text) => {
+      if (!text) return null;
+      const normalized = text.replaceAll("两", "二").replaceAll("〇", "零");
+      if (/^\d+$/.test(normalized)) return Number(normalized);
+      const digits = { 零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+      if (normalized.includes("十")) {
+        const [left, right] = normalized.split("十", 2);
+        return (left ? digits[left] : 1) * 10 + (right ? digits[right] : 0);
+      }
+      if ([...normalized].every((char) => Object.hasOwn(digits, char))) {
+        return Number([...normalized].map((char) => digits[char]).join(""));
+      }
+      return null;
+    };
+    const years = [...value.matchAll(/公元前(\d{1,4})年?/g)].map((match) => -Number(match[1]));
+    const withoutBce = value.replaceAll(/公元前\d{1,4}年?/g, "");
+    years.push(...[...withoutBce.matchAll(/(?<!\d)(\d{3,4})年?/g)].map((match) => Number(match[1])));
+    for (const match of value.matchAll(/(公元前)?([零〇一二三四五六七八九十两\d]{1,4})世纪(?:([零〇一二三四五六七八九十两\d]{1,3})年代)?/g)) {
+      const century = chineseNumber(match[2]);
+      const decade = chineseNumber(match[3]);
+      if (!century) continue;
+      years.push(match[1] ? -(century * 100) : (century - 1) * 100 + (decade ?? 1));
     }
+    if (years.length) return periodForYear(Math.min(...years));
     return "其他";
   }
 
@@ -60,18 +103,21 @@
 
   const state = {
     query: "",
-    status: "visited",
-    group: "province",
-    batches: new Set([1, 2, 3, 4, 5, 6, 7, 8]),
+    status: ["all", "visited", "unvisited"].includes(requestedStatus) ? requestedStatus : "visited",
+    group: ["province", "batch", "period"].includes(requestedGroup) ? requestedGroup : "province",
+    batches: requestedBatch >= 1 && requestedBatch <= 8
+      ? new Set([requestedBatch])
+      : new Set([1, 2, 3, 4, 5, 6, 7, 8]),
     province: provinceOrder.includes(urlParams.get("province"))
       ? urlParams.get("province")
       : "all",
     city: "all",
     district: "all",
-    category: "all",
-    period: "all",
-    includeMerged: false,
-    timelineGranularity: "year",
+    category: urlParams.get("category") || "all",
+    period: urlParams.get("period") || "all",
+    visitYear: requestedVisitYear >= 1900 && requestedVisitYear <= 2100 ? requestedVisitYear : null,
+    visitMonth: requestedVisitMonth >= 1 && requestedVisitMonth <= 12 ? requestedVisitMonth : null,
+    timelineYear: null,
     page: 1,
     pageSize: 20,
     activeDetailId: null,
@@ -92,12 +138,12 @@
     districtFilter: document.querySelector("#districtFilter"),
     categoryFilter: document.querySelector("#categoryFilter"),
     periodFilter: document.querySelector("#periodFilter"),
-    mergedToggle: document.querySelector("#mergedToggle"),
-    timelineControl: document.querySelector("#timelineControl"),
-    timeCoverage: document.querySelector("#timeCoverage"),
+    timelineTitle: document.querySelector("#timelineTitle"),
+    timelineBackButton: document.querySelector("#timelineBackButton"),
     timelineChart: document.querySelector("#timelineChart"),
     batchChart: document.querySelector("#batchChart"),
     categoryChart: document.querySelector("#categoryChart"),
+    periodChart: document.querySelector("#periodChart"),
     resetFiltersButton: document.querySelector("#resetFiltersButton"),
     provinceProgress: document.querySelector("#provinceProgress"),
     resultCount: document.querySelector("#resultCount"),
@@ -145,7 +191,7 @@
     if (!value || typeof value !== "object" || Array.isArray(value)) return {};
     const sanitized = {};
     Object.entries(value).forEach(([id, record]) => {
-      if (!unitById.has(id) || !record || typeof record !== "object") return;
+      if (!recordIdSet.has(id) || !record || typeof record !== "object") return;
       sanitized[id] = {
         visited: Boolean(record.visited),
         time: String(record.time || "").trim(),
@@ -188,7 +234,15 @@
   }
 
   function recordFor(id) {
-    return records[id] || { visited: false, time: "", notes: "" };
+    const ids = unitById.get(id)?.record_ids || [id];
+    const values = ids.map((recordId) => records[recordId]).filter(Boolean);
+    if (!values.length) return { visited: false, time: "", notes: "" };
+    const combined = (field, separator) => [...new Set(values.map((record) => record[field]).filter(Boolean))].join(separator);
+    return {
+      visited: values.some((record) => record.visited),
+      time: combined("time", "、"),
+      notes: combined("notes", "；"),
+    };
   }
 
   function updateRecord(id, patch) {
@@ -197,6 +251,8 @@
     next.visited = Boolean(next.visited);
     next.time = String(next.time || "").trim();
     next.notes = String(next.notes || "").trim();
+    const recordIds = unitById.get(id)?.record_ids || [id];
+    recordIds.filter((recordId) => recordId !== id).forEach((recordId) => delete records[recordId]);
     if (!next.visited && !next.time && !next.notes) {
       delete records[id];
     } else {
@@ -235,18 +291,28 @@
     toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 2600);
   }
 
+  function browseCity(unit) {
+    if (["省直辖县级行政区", "自治区直辖县级行政区"].includes(unit.city)) return unit.district;
+    return unit.city;
+  }
+
   function updateCityFilter() {
     if (state.province === "all") {
       state.city = "all";
-      elements.cityFilter.innerHTML = '<option value="all">请先选择省份</option>';
+      elements.cityFilter.innerHTML = '<option value="all">请先选择省级行政区</option>';
       elements.cityFilter.disabled = true;
       updateDistrictFilter();
       return;
     }
 
-    const cities = [...new Set(units
+    const catalog = divisions[state.province] || { cities: [], direct: [] };
+    const cities = [...new Set([
+      ...catalog.cities,
+      ...catalog.direct,
+      ...units
       .filter((unit) => unit.province === state.province && unit.city)
-      .map((unit) => unit.city))]
+      .map(browseCity),
+    ])]
       .sort((a, b) => {
         if (a === "跨地级行政区") return 1;
         if (b === "跨地级行政区") return -1;
@@ -254,7 +320,7 @@
       });
     if (!cities.includes(state.city)) state.city = "all";
     elements.cityFilter.innerHTML = [
-      '<option value="all">全部地级市 / 州</option>',
+      '<option value="all">全部地级行政区</option>',
       ...cities.map((city) => `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`),
     ].join("");
     elements.cityFilter.value = state.city;
@@ -265,12 +331,19 @@
   function updateDistrictFilter() {
     if (state.province === "all" || state.city === "all") {
       state.district = "all";
-      elements.districtFilter.innerHTML = '<option value="all">请先选择地级市 / 州</option>';
+      elements.districtFilter.innerHTML = '<option value="all">请先选择地级行政区</option>';
+      elements.districtFilter.disabled = true;
+      return;
+    }
+    const direct = divisions[state.province]?.direct || [];
+    if (direct.includes(state.city)) {
+      state.district = "all";
+      elements.districtFilter.innerHTML = '<option value="all">不设下级行政区</option>';
       elements.districtFilter.disabled = true;
       return;
     }
     const districts = [...new Set(units
-      .filter((unit) => unit.province === state.province && unit.city === state.city && unit.district)
+      .filter((unit) => unit.province === state.province && browseCity(unit) === state.city && unit.district)
       .map((unit) => unit.district))]
       .sort((a, b) => {
         if (a === "跨县级行政区" || a === "不设县级行政区") return 1;
@@ -279,7 +352,7 @@
       });
     if (!districts.includes(state.district)) state.district = "all";
     elements.districtFilter.innerHTML = [
-      '<option value="all">全部区 / 县</option>',
+      '<option value="all">全部县级行政区</option>',
       ...districts.map((district) => `<option value="${escapeHtml(district)}">${escapeHtml(district)}</option>`),
     ].join("");
     elements.districtFilter.value = state.district;
@@ -309,7 +382,7 @@
 
     const provinces = provinceOrder.filter((province) => units.some((unit) => unit.province === province));
     elements.provinceFilter.innerHTML = [
-      '<option value="all">全部省份</option>',
+      '<option value="all">全部省级行政区</option>',
       ...provinces.map((province) => `<option value="${escapeHtml(province)}">${escapeHtml(province)}</option>`),
     ].join("");
     elements.provinceFilter.value = state.province;
@@ -317,32 +390,43 @@
 
     const categories = [...new Set(units.map((unit) => unit.category))]
       .sort((a, b) => collator.compare(a, b));
+    if (!categories.includes(state.category)) state.category = "all";
     elements.categoryFilter.innerHTML = [
       '<option value="all">全部类别</option>',
       ...categories.map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`),
     ].join("");
+    elements.categoryFilter.value = state.category;
 
+    if (!periodOrder.includes(state.period)) state.period = "all";
     elements.periodFilter.innerHTML = [
       '<option value="all">全部年代</option>',
       ...periodOrder
         .filter((period) => units.some((unit) => unit.period === period))
         .map((period) => `<option value="${escapeHtml(period)}">${escapeHtml(period)}</option>`),
     ].join("");
+    elements.periodFilter.value = state.period;
+    syncStatusButtons();
+    syncGroupButtons();
+    syncBatchButtons();
   }
 
   function matchesFilters(unit) {
-    if (unit.kind === "merged" && !state.includeMerged) return false;
     if (!state.batches.has(unit.batch)) return false;
     if (state.province !== "all" && unit.province !== state.province) return false;
-    if (state.city !== "all" && unit.city !== state.city) return false;
+    if (state.city !== "all" && browseCity(unit) !== state.city) return false;
     if (state.district !== "all" && unit.district !== state.district) return false;
     if (state.category !== "all" && unit.category !== state.category) return false;
     if (state.period !== "all" && unit.period !== state.period) return false;
     const record = recordFor(unit.id);
     if (state.status === "visited" && !record.visited) return false;
     if (state.status === "unvisited" && record.visited) return false;
+    if (state.visitYear) {
+      const visitTime = parseVisitTime(record.time);
+      if (!visitTime || visitTime.year !== state.visitYear) return false;
+      if (state.visitMonth && visitTime.month !== state.visitMonth) return false;
+    }
     if (state.query) {
-      const haystack = `${unit.name} ${unit.alias || ""} ${unit.code} ${unit.province || ""} ${unit.city || ""} ${unit.district || ""} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
+      const haystack = `${unit.name} ${unit.alias || ""} ${unit.search_terms || ""} ${unit.code} ${unit.province || ""} ${unit.city || ""} ${unit.district || ""} ${unit.current_location || ""} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
       if (!haystack.includes(state.query)) return false;
     }
     return true;
@@ -366,7 +450,6 @@
         if (provinceDifference) return provinceDifference;
         if (a.batch !== b.batch) return a.batch - b.batch;
       }
-      if (a.kind !== b.kind) return a.kind === "unit" ? -1 : 1;
       return collator.compare(a.name, b.name);
     });
     return result;
@@ -378,7 +461,7 @@
     // Batch 7 merged projects continue as 1944-1990, followed by the
     // Babaoshan supplement numbered 1991.
     if (unit.batch === 7 && officialSerial) return officialSerial;
-    if (unit.kind === "unit" && officialSerial) return officialSerial;
+    if (officialSerial) return officialSerial;
     const mergeSerial = Number(String(unit.id).match(/(\d+)$/)?.[1] || 0);
     return 100000 + mergeSerial;
   }
@@ -404,39 +487,56 @@
     };
   }
 
+  function recordsHref(filters = {}) {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
+    });
+    return `./index.html?${params.toString()}`;
+  }
+
   function renderTimeline(visitedUnits) {
     const parsed = visitedUnits
       .map((unit) => parseVisitTime(recordFor(unit.id).time))
       .filter(Boolean);
+    const monthly = Number.isInteger(state.timelineYear);
     const counts = new Map();
-    parsed.forEach((time) => {
-      if (state.timelineGranularity === "month" && !time.month) return;
-      const key = state.timelineGranularity === "year"
-        ? String(time.year)
-        : `${time.year}-${String(time.month).padStart(2, "0")}`;
-      counts.set(key, (counts.get(key) || 0) + 1);
-    });
-    const points = [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+
+    if (monthly) {
+      parsed
+        .filter((time) => time.year === state.timelineYear && time.month)
+        .forEach((time) => counts.set(time.month, (counts.get(time.month) || 0) + 1));
+      elements.timelineTitle.textContent = `${state.timelineYear} 年各月到访`;
+      elements.timelineBackButton.hidden = false;
+    } else {
+      parsed.forEach((time) => counts.set(time.year, (counts.get(time.year) || 0) + 1));
+      elements.timelineTitle.textContent = "到访趋势";
+      elements.timelineBackButton.hidden = true;
+    }
+
+    const points = [...counts.entries()].sort(([a], [b]) => a - b);
     if (!points.length) {
-      const label = state.timelineGranularity === "year" ? "尚无可统计的到访年份" : "尚无精确到月份的到访时间";
+      const label = monthly ? `${state.timelineYear} 年尚无精确到月份的记录` : "尚无可统计的到访年份";
       elements.timelineChart.innerHTML = `<div class="chart-empty">${label}</div>`;
       elements.timelineChart.style.removeProperty("--point-count");
       elements.timelineChart.setAttribute("aria-label", label);
       return;
     }
-    const maximum = Math.max(...points.map(([, count]) => count));
+    const maximum = Math.max(1, ...points.map(([, count]) => count));
     elements.timelineChart.style.setProperty("--point-count", points.length);
-    elements.timelineChart.innerHTML = points.map(([label, count]) => {
-      const height = Math.max(5, Math.round(count / maximum * 150));
-      return `<div class="timeline-point">
-        <strong>${count}</strong>
-        <div class="timeline-bar" style="height:${height}px"></div>
-        <span>${escapeHtml(label)}</span>
-      </div>`;
+    elements.timelineChart.innerHTML = points.map(([value, count]) => {
+      const height = count ? Math.max(5, Math.round(count / maximum * 150)) : 0;
+      const label = monthly ? `${value}月` : String(value);
+      const content = `<strong>${count}</strong><span class="timeline-bar" style="height:${height}px"></span><span>${label}</span>`;
+      if (monthly) {
+        const href = recordsHref({ status: "visited", visitYear: state.timelineYear, visitMonth: value });
+        return `<a class="timeline-point" href="${escapeHtml(href)}" aria-label="查看 ${state.timelineYear} 年 ${value} 月到访的 ${count} 项">${content}</a>`;
+      }
+      return `<button class="timeline-point" type="button" data-year="${value}" aria-label="查看 ${value} 年各月统计">${content}</button>`;
     }).join("");
     elements.timelineChart.setAttribute(
       "aria-label",
-      `${state.timelineGranularity === "year" ? "年度" : "月度"}到访趋势：${points.map(([label, count]) => `${label} ${count}处`).join("，")}`,
+      `${monthly ? `${state.timelineYear}年月度` : "年度"}到访趋势：${points.map(([value, count]) => `${value}${monthly ? "月" : "年"} ${count}处`).join("，")}`,
     );
   }
 
@@ -448,49 +548,148 @@
       const percent = batchUnits.length ? visited / batchUnits.length * 100 : 0;
       return { batch, total: batchUnits.length, visited, percent };
     });
-    elements.batchChart.innerHTML = rows.map((row) => `<div class="horizontal-row">
+    elements.batchChart.innerHTML = rows.map((row) => `<a class="horizontal-row chart-row-link" href="${escapeHtml(recordsHref({ status: "visited", batch: row.batch, group: "batch" }))}" aria-label="查看第 ${row.batch} 批已到访的 ${row.visited} 项">
       <span class="horizontal-label">第 ${row.batch} 批</span>
       <div class="bar-track"><span class="bar-fill" style="width:${row.percent.toFixed(2)}%"></span></div>
       <strong>${row.visited}<small> / ${row.total}</small></strong>
-    </div>`).join("");
+    </a>`).join("");
     elements.batchChart.setAttribute(
       "aria-label",
       `各批完成度：${rows.map((row) => `第${row.batch}批 ${row.visited}/${row.total}`).join("，")}`,
     );
   }
 
+  const chartColors = ["#8bc9b5", "#f0a08d", "#edc86f", "#8bbbd5", "#bca5d0", "#afc58a", "#e2b487", "#a7b8c2", "#80cbc7", "#e5a0b3", "#c8ce82", "#aaade0"];
+
+  function renderDistributionChart(element, rows, filterKey, label) {
+    if (!rows.length) {
+      element.innerHTML = '<div class="chart-empty compact-empty">尚无已到访项目</div>';
+      element.setAttribute("aria-label", "尚无已到访项目");
+      return;
+    }
+    const total = rows.reduce((sum, [, count]) => sum + count, 0);
+    const destinations = rows.map(([name, count]) => ({
+      percent: count / total * 100,
+      href: recordsHref({ status: "visited", [filterKey]: name, group: filterKey === "period" ? "period" : "province" }),
+    }));
+    let offset = 0;
+    const segments = rows.map(([name, count], index) => {
+      const percent = count / total * 100;
+      const segment = `<circle cx="50" cy="50" r="34" pathLength="100" fill="none" stroke="${chartColors[index % chartColors.length]}" stroke-width="22" stroke-dasharray="${percent} ${100 - percent}" stroke-dashoffset="${-offset}"></circle>`;
+      offset += percent;
+      return segment;
+    }).join("");
+    const legend = rows.map(([name, count], index) => {
+      const href = recordsHref({ status: "visited", [filterKey]: name, group: filterKey === "period" ? "period" : "province" });
+      return `<a class="distribution-legend-item" href="${escapeHtml(href)}">
+        <span class="distribution-swatch" style="background:${chartColors[index % chartColors.length]}"></span>
+        <span title="${escapeHtml(name)}">${escapeHtml(name)}</span><strong>${count}</strong>
+      </a>`;
+    }).join("");
+    element.innerHTML = `<div class="distribution-figure">
+      <svg class="donut-chart" viewBox="0 0 100 100" aria-hidden="true" data-segments="${escapeHtml(encodeURIComponent(JSON.stringify(destinations)))}">
+        <g transform="rotate(-90 50 50)">${segments}</g>
+        <text x="50" y="48" text-anchor="middle">${total}</text>
+        <text class="donut-caption" x="50" y="59" text-anchor="middle">已到访</text>
+      </svg>
+      <div class="distribution-legend">${legend}</div>
+    </div>`;
+    element.setAttribute("aria-label", `${label}：${rows.map(([name, count]) => `${name} ${count}处`).join("，")}`);
+  }
+
+  function renderCalloutPie(element, rows, filterKey, label) {
+    if (!rows.length) {
+      element.innerHTML = '<div class="chart-empty compact-empty">尚无已到访项目</div>';
+      element.setAttribute("aria-label", "尚无已到访项目");
+      return;
+    }
+
+    const total = rows.reduce((sum, [, count]) => sum + count, 0);
+    const centerX = 260;
+    const centerY = 100;
+    const outerRadius = 60;
+    const elbowRadius = 74;
+    const rotationDegrees = 29;
+    const rotationRadians = rotationDegrees / 180 * Math.PI;
+    let offset = 0;
+    const items = rows.map(([name, count], index) => {
+      const percent = count / total * 100;
+      const middleAngle = (offset + percent / 2) / 100 * Math.PI * 2 - Math.PI / 2 + rotationRadians;
+      const side = Math.cos(middleAngle) >= 0 ? "right" : "left";
+      const item = {
+        name,
+        count,
+        index,
+        percent,
+        offset,
+        side,
+        edgeX: centerX + Math.cos(middleAngle) * outerRadius,
+        edgeY: centerY + Math.sin(middleAngle) * outerRadius,
+        elbowX: centerX + Math.cos(middleAngle) * elbowRadius,
+        rawY: centerY + Math.sin(middleAngle) * elbowRadius,
+        href: recordsHref({ status: "visited", [filterKey]: name, group: "province" }),
+      };
+      offset += percent;
+      return item;
+    });
+
+    ["left", "right"].forEach((side) => {
+      const sideItems = items.filter((item) => item.side === side).sort((a, b) => a.rawY - b.rawY);
+      const minimumY = 18;
+      const maximumY = 182;
+      const gap = 27;
+      sideItems.forEach((item, index) => {
+        item.labelY = Math.max(item.rawY, index ? sideItems[index - 1].labelY + gap : minimumY);
+      });
+      const overflow = sideItems.length ? sideItems[sideItems.length - 1].labelY - maximumY : 0;
+      if (overflow > 0) sideItems.forEach((item) => { item.labelY -= overflow; });
+      if (sideItems.length && sideItems[0].labelY < minimumY) {
+        const shift = minimumY - sideItems[0].labelY;
+        sideItems.forEach((item) => { item.labelY += shift; });
+      }
+    });
+
+    const segments = items.map((item) => `<a class="callout-segment" href="${escapeHtml(item.href)}" aria-label="查看${escapeHtml(item.name)}已到访的 ${item.count} 项">
+      <circle cx="${centerX}" cy="${centerY}" r="30" pathLength="100" fill="none" stroke="${chartColors[item.index % chartColors.length]}" stroke-width="60" stroke-dasharray="${item.percent} ${100 - item.percent}" stroke-dashoffset="${-item.offset}"></circle>
+    </a>`).join("");
+    const callouts = items.map((item) => {
+      const lineEndX = item.side === "right" ? 348 : 172;
+      const textX = item.side === "right" ? 354 : 166;
+      const anchor = item.side === "right" ? "start" : "end";
+      return `<a class="pie-callout" href="${escapeHtml(item.href)}">
+        <polyline points="${item.edgeX.toFixed(1)},${item.edgeY.toFixed(1)} ${item.elbowX.toFixed(1)},${item.labelY.toFixed(1)} ${lineEndX},${item.labelY.toFixed(1)}" stroke="${chartColors[item.index % chartColors.length]}"></polyline>
+        <text x="${textX}" y="${(item.labelY + 3).toFixed(1)}" text-anchor="${anchor}"><tspan>${escapeHtml(item.name)}</tspan><tspan class="callout-count"> ${item.count}</tspan></text>
+      </a>`;
+    }).join("");
+
+    element.innerHTML = `<svg class="category-callout-chart" viewBox="0 0 520 200" role="img" aria-label="${escapeHtml(label)}">
+      <g transform="rotate(${-90 + rotationDegrees} ${centerX} ${centerY})">${segments}</g>
+      ${callouts}
+    </svg>`;
+    element.setAttribute("aria-label", `${label}：${rows.map(([name, count]) => `${name} ${count}处`).join("，")}`);
+  }
+
   function renderCategoryChart(visitedUnits) {
     const counts = new Map();
     visitedUnits.forEach((unit) => counts.set(unit.category, (counts.get(unit.category) || 0) + 1));
     const rows = [...counts.entries()].sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0]));
-    if (!rows.length) {
-      elements.categoryChart.innerHTML = '<div class="chart-empty compact-empty">尚无已到访项目</div>';
-      elements.categoryChart.setAttribute("aria-label", "尚无已到访项目");
-      return;
-    }
-    const maximum = rows[0][1];
-    elements.categoryChart.innerHTML = rows.map(([category, count]) => `<div class="horizontal-row category-row">
-      <span class="horizontal-label" title="${escapeHtml(category)}">${escapeHtml(category)}</span>
-      <div class="bar-track"><span class="bar-fill category-fill" style="width:${(count / maximum * 100).toFixed(2)}%"></span></div>
-      <strong>${count}</strong>
-    </div>`).join("");
-    elements.categoryChart.setAttribute(
-      "aria-label",
-      `到访类别分布：${rows.map(([category, count]) => `${category} ${count}处`).join("，")}`,
-    );
+    renderCalloutPie(elements.categoryChart, rows, "category", "类别分布");
+  }
+
+  function renderPeriodChart(visitedUnits) {
+    const counts = new Map();
+    visitedUnits.forEach((unit) => counts.set(unit.period, (counts.get(unit.period) || 0) + 1));
+    const rows = [...counts.entries()].sort((a, b) => periodOrder.indexOf(a[0]) - periodOrder.indexOf(b[0]));
+    renderDistributionChart(elements.periodChart, rows, "period", "年代分布");
   }
 
   function renderAnalytics() {
     const independent = units.filter((unit) => unit.kind === "unit");
     const visited = independent.filter((unit) => recordFor(unit.id).visited);
-    const parsedTimes = visited.map((unit) => parseVisitTime(recordFor(unit.id).time));
-    const withYear = parsedTimes.filter(Boolean).length;
-    const withMonth = parsedTimes.filter((time) => time && time.month).length;
-    const withoutTime = visited.length - withYear;
-    elements.timeCoverage.textContent = `已到访 ${visited.length} · 有年份 ${withYear} · 含月份 ${withMonth} · 未填时间 ${withoutTime}`;
     renderTimeline(visited);
     renderBatchChart(independent);
     renderCategoryChart(visited);
+    renderPeriodChart(visited);
   }
 
   function renderProvinceProgress() {
@@ -501,7 +700,8 @@
         const provinceUnits = independent.filter((unit) => unit.province === province);
         const visited = provinceUnits.filter((unit) => recordFor(unit.id).visited).length;
         const active = state.province === province ? " active" : "";
-        return `<button class="province-progress-button${active}" type="button" data-province="${escapeHtml(province)}">
+        const visitedClass = visited ? " has-visits" : "";
+        return `<button class="province-progress-button${active}${visitedClass}" type="button" data-province="${escapeHtml(province)}">
           <span>${escapeHtml(shortProvince(province))}</span>
           <small>${visited} / ${provinceUnits.length}</small>
         </button>`;
@@ -518,7 +718,6 @@
     const record = recordFor(unit.id);
     const visitedClass = record.visited ? " visited-row" : "";
     const checked = record.visited ? " checked" : "";
-    const merged = unit.kind === "merged" ? '<span class="merged-label">并入既有国保</span>' : "";
     const alias = unit.alias ? `<span class="unit-alias">（${escapeHtml(unit.alias)}）</span>` : "";
     const noteClass = record.notes ? " has-note" : "";
     const disabled = readOnly ? " disabled" : "";
@@ -527,12 +726,11 @@
       <td class="col-check"><input class="visit-checkbox" type="checkbox" aria-label="标记到访：${escapeHtml(unit.name)}"${checked}${disabled}></td>
       <td class="col-name">
         <button class="unit-name-button" type="button" data-action="detail">${escapeHtml(unit.name)}${alias}</button>
-        ${merged}
       </td>
       <td class="col-batch"><span class="batch-badge">${unit.batch}</span></td>
       <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
       <td class="col-location">
-        <span class="location-current">${escapeHtml(unit.province)} · ${escapeHtml(unit.city)} · ${escapeHtml(unit.district)}</span>
+        <span class="location-current">${escapeHtml(unit.current_location || `${unit.province} · ${unit.city} · ${unit.district}`)}</span>
       </td>
       <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}></td>
       <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">${readOnly ? "查看" : "备注"}</button></td>
@@ -579,9 +777,12 @@
     const start = (state.page - 1) * state.pageSize;
     const pageUnits = filtered.slice(start, start + state.pageSize);
     const end = Math.min(start + state.pageSize, filtered.length);
+    const visitTimeLabel = state.visitYear
+      ? ` · 到访时间 ${state.visitYear}${state.visitMonth ? `-${String(state.visitMonth).padStart(2, "0")}` : ""}`
+      : "";
     elements.resultCount.textContent = filtered.length
-      ? `符合条件 ${formatNumber(filtered.length)} 项，当前 ${formatNumber(start + 1)}-${formatNumber(end)}`
-      : "没有符合条件的项目";
+      ? `符合条件 ${formatNumber(filtered.length)} 项，当前 ${formatNumber(start + 1)}-${formatNumber(end)}${visitTimeLabel}`
+      : `没有符合条件的项目${visitTimeLabel}`;
     elements.pageIndicator.textContent = `${state.page} / ${filtered.length ? pageCount : 1}`;
     elements.pageJumpInput.max = String(filtered.length ? pageCount : 1);
     elements.pageJumpInput.value = String(state.page);
@@ -648,14 +849,14 @@
     state.district = "all";
     state.category = "all";
     state.period = "all";
-    state.includeMerged = false;
+    state.visitYear = null;
+    state.visitMonth = null;
     state.page = 1;
     elements.searchInput.value = "";
     elements.provinceFilter.value = "all";
     updateCityFilter();
     elements.categoryFilter.value = "all";
     elements.periodFilter.value = "all";
-    elements.mergedToggle.checked = false;
     syncStatusButtons();
     syncGroupButtons();
     syncBatchButtons();
@@ -668,14 +869,12 @@
     if (!unit) return;
     const record = recordFor(id);
     state.activeDetailId = id;
-    elements.dialogMeta.textContent = `${unit.code || "并入项目"} · 第 ${unit.batch} 批 · ${unit.year}`;
+    elements.dialogMeta.textContent = `${unit.code ? `${unit.code} · ` : ""}第 ${unit.batch} 批 · ${unit.year}`;
     elements.dialogTitle.textContent = unit.name;
     const facts = [
       ["类别", unit.category, false],
       ["年代", unit.period, false],
-      ["省级", unit.province, false],
-      ["地级", unit.city, false],
-      ["县级", unit.district, false],
+      ["现行区划", unit.current_location || `${unit.province} · ${unit.city} · ${unit.district}`, true],
     ];
     if (unit.alias) facts.splice(1, 0, ["别名", unit.alias, false]);
     if (unit.remark) facts.push(["备注", unit.remark, true]);
@@ -730,12 +929,12 @@
 
   function exportCsv() {
     const filtered = sortedFilteredUnits();
-    const headers = ["编号", "名称", "别名", "批次", "公布年份", "现行省级", "现行地级", "现行县级", "类别", "年代", "项目类型", "并入备注", "是否去过", "到访时间", "个人备注"];
+    const headers = ["编号", "名称", "别名", "批次", "公布年份", "现行省级", "现行地级", "现行县级", "现行区划展示", "类别", "年代", "是否去过", "到访时间", "个人备注"];
     const rows = filtered.map((unit) => {
       const record = recordFor(unit.id);
       return [
-        unit.code, unit.name, unit.alias || "", unit.batch, unit.year, unit.province, unit.city || "", unit.district || "", unit.category, unit.period,
-        unit.kind === "unit" ? "独立国保" : "并入项目", unit.remark, record.visited ? "是" : "否", record.time, record.notes,
+        unit.code, unit.name, unit.alias || "", unit.batch, unit.year, unit.province, unit.city || "", unit.district || "", unit.current_location || "", unit.category, unit.period,
+        record.visited ? "是" : "否", record.time, record.notes,
       ].map(csvCell).join(",");
     });
     download("国保足迹-当前筛选.csv", `\ufeff${headers.join(",")}\r\n${rows.join("\r\n")}`, "text/csv;charset=utf-8");
@@ -749,7 +948,7 @@
       if (!imported || typeof imported !== "object" || Array.isArray(imported)) throw new Error("invalid");
       let count = 0;
       Object.entries(imported).forEach(([id, value]) => {
-        if (!unitById.has(id) || !value || typeof value !== "object") return;
+        if (!recordIdSet.has(id) || !value || typeof value !== "object") return;
         records[id] = {
           visited: Boolean(value.visited),
           time: String(value.time || "").trim(),
@@ -776,7 +975,7 @@
       records = sanitizeRecords(payload.records || payload);
       localStorage.setItem(storageKey, JSON.stringify(records));
       editorConnected = true;
-      elements.saveStatus.textContent = "已连接本地编辑服务";
+      elements.saveStatus.textContent = "";
       renderAll();
     } catch (error) {
       elements.saveStatus.textContent = "当前浏览器本地保存";
@@ -862,20 +1061,38 @@
       resetPageAndRender();
     });
 
-    elements.mergedToggle.addEventListener("change", () => {
-      state.includeMerged = elements.mergedToggle.checked;
-      resetPageAndRender();
-    });
-
-    elements.timelineControl.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-granularity]");
+    elements.timelineChart.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-year]");
       if (!button) return;
-      state.timelineGranularity = button.dataset.granularity;
-      elements.timelineControl.querySelectorAll("button").forEach((item) => {
-        item.classList.toggle("active", item === button);
-      });
+      state.timelineYear = Number(button.dataset.year);
       const independent = units.filter((unit) => unit.kind === "unit");
       renderTimeline(independent.filter((unit) => recordFor(unit.id).visited));
+    });
+
+    elements.timelineBackButton.addEventListener("click", () => {
+      state.timelineYear = null;
+      const independent = units.filter((unit) => unit.kind === "unit");
+      renderTimeline(independent.filter((unit) => recordFor(unit.id).visited));
+    });
+
+    [elements.categoryChart, elements.periodChart].forEach((chart) => {
+      chart.addEventListener("click", (event) => {
+        const svg = event.target.closest("svg[data-segments]");
+        if (!svg) return;
+        const bounds = svg.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width * 100 - 50;
+        const y = (event.clientY - bounds.top) / bounds.height * 100 - 50;
+        const radius = Math.hypot(x, y);
+        if (radius < 23 || radius > 50) return;
+        const position = ((Math.atan2(y, x) * 180 / Math.PI + 450) % 360) / 3.6;
+        const segments = JSON.parse(decodeURIComponent(svg.dataset.segments));
+        let end = 0;
+        const segment = segments.find((item) => {
+          end += item.percent;
+          return position <= end;
+        });
+        if (segment) window.location.href = segment.href;
+      });
     });
 
     elements.resetFiltersButton.addEventListener("click", resetFilters);

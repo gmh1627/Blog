@@ -7,6 +7,7 @@
   <title>国保足迹 - 全国重点文物保护单位到访记录</title>
   <link rel="stylesheet" href="./styles.css">
   <script src="./data/runtime.js" defer></script>
+  <script src="./data/divisions.js" defer></script>
   <script src="./data/units.js" defer></script>
   <script src="./app.js" defer></script>
 </head>
@@ -40,12 +41,12 @@
         <span class="stat-label">独立国保</span>
         <strong id="totalStat">5,058</strong>
       </div>
-      <div class="stat">
+      <a class="stat stat-link" href="./index.html?status=visited" aria-label="查看全部已到访项目">
         <span class="stat-label">已到访</span>
         <strong id="visitedStat">0</strong>
-      </div>
+      </a>
       <div class="stat">
-        <span class="stat-label">到访省份</span>
+        <span class="stat-label">到访省级行政区</span>
         <strong id="provinceStat">0</strong>
       </div>
       <div class="stat">
@@ -57,22 +58,17 @@
     <section class="analytics-band" aria-labelledby="analyticsTitle">
       <div class="analytics-heading">
         <div>
-          <p class="eyebrow">个人到访数据</p>
           <h2 id="analyticsTitle">到访统计</h2>
         </div>
-        <p id="timeCoverage" class="analytics-summary"></p>
       </div>
       <div class="analytics-grid">
         <article class="chart-panel timeline-panel">
           <div class="chart-heading">
-            <h3>到访趋势</h3>
-            <div class="segmented compact" id="timelineControl" aria-label="趋势统计精度">
-              <button type="button" class="active" data-granularity="year">按年</button>
-              <button type="button" data-granularity="month">按月</button>
-            </div>
+            <h3 id="timelineTitle">到访趋势</h3>
+            <button id="timelineBackButton" class="text-button" type="button" hidden>返回年度</button>
           </div>
           <div class="chart-scroll">
-            <div id="timelineChart" class="timeline-chart" role="img" aria-label="到访趋势图"></div>
+            <div id="timelineChart" class="timeline-chart" role="group" aria-label="到访趋势图"></div>
           </div>
         </article>
 
@@ -80,14 +76,21 @@
           <div class="chart-heading">
             <h3>各批完成度</h3>
           </div>
-          <div id="batchChart" class="horizontal-chart" role="img" aria-label="各批全国重点文物保护单位完成度"></div>
+          <div id="batchChart" class="horizontal-chart" role="group" aria-label="各批全国重点文物保护单位完成度"></div>
         </article>
 
         <article class="chart-panel">
           <div class="chart-heading">
-            <h3>到访类别</h3>
+            <h3>类别</h3>
           </div>
-          <div id="categoryChart" class="horizontal-chart" role="img" aria-label="已到访单位类别分布"></div>
+          <div id="categoryChart" class="distribution-chart" role="group" aria-label="已到访单位类别分布"></div>
+        </article>
+
+        <article class="chart-panel">
+          <div class="chart-heading">
+            <h3>年代</h3>
+          </div>
+          <div id="periodChart" class="distribution-chart" role="group" aria-label="已到访单位年代分布"></div>
         </article>
       </div>
     </section>
@@ -95,10 +98,9 @@
     <section class="statistics-provinces" aria-labelledby="provinceProgressTitle">
       <div class="analytics-heading">
         <div>
-          <p class="eyebrow">区域完成度</p>
-          <h2 id="provinceProgressTitle">省份进度</h2>
+          <h2 id="provinceProgressTitle">省级行政区进度</h2>
         </div>
-        <p class="analytics-summary">选择省份可返回名录继续标记</p>
+        <p class="analytics-summary">选择省级行政区可返回名录继续标记</p>
       </div>
       <div id="provinceProgress" class="province-progress-grid"></div>
     </section>
@@ -116,7 +118,7 @@
         <button type="button" data-status="unvisited">未到访</button>
       </div>
       <div class="segmented" id="groupControl" aria-label="分组方式">
-        <button type="button" class="active" data-group="province">按省份</button>
+        <button type="button" class="active" data-group="province">按省级行政区</button>
         <button type="button" data-group="batch">按批次</button>
         <button type="button" data-group="period">按年代</button>
       </div>
@@ -133,17 +135,17 @@
         </div>
 
         <label class="filter-section field-label">
-          <span>省份</span>
+          <span>省级行政区</span>
           <select id="provinceFilter"></select>
         </label>
 
         <label class="filter-section field-label">
-          <span>地级市 / 州</span>
+          <span>地级行政区</span>
           <select id="cityFilter" disabled></select>
         </label>
 
         <label class="filter-section field-label">
-          <span>区 / 县</span>
+          <span>县级行政区</span>
           <select id="districtFilter" disabled></select>
         </label>
 
@@ -155,14 +157,6 @@
         <label class="filter-section field-label">
           <span>年代</span>
           <select id="periodFilter"></select>
-        </label>
-
-        <label class="filter-section toggle-row">
-          <span>
-            <strong>并入项目</strong>
-            <small>另计 238 项</small>
-          </span>
-          <input id="mergedToggle" type="checkbox" role="switch">
         </label>
 
         <button id="resetFiltersButton" class="button secondary full-width" type="button">重置筛选</button>
@@ -232,7 +226,6 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <footer>
-    <span>数据口径：独立国保 5,058 处，另收录并入项目 238 项。</span>
     <span id="saveStatus" class="save-status"></span>
     <button id="clearRecordsButton" class="text-button danger" type="button">清空个人记录</button>
   </footer>

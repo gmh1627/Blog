@@ -14,11 +14,12 @@ hexo.extend.filter.register('after_generate', async function () {
   const outputData = path.join(outputRoot, 'data');
   const privateRecordsPath = path.join(appRoot, 'data', 'visits.private.json');
 
-  const [indexHtml, appJs, stylesCss, unitsJs] = await Promise.all([
+  const [indexHtml, appJs, stylesCss, unitsJs, divisionsJs] = await Promise.all([
     fs.readFile(path.join(appRoot, 'index.html'), 'utf8'),
     fs.readFile(path.join(appRoot, 'app.js'), 'utf8'),
     fs.readFile(path.join(appRoot, 'styles.css'), 'utf8'),
     fs.readFile(path.join(appRoot, 'data', 'units.js'), 'utf8'),
+    fs.readFile(path.join(appRoot, 'data', 'divisions.js'), 'utf8'),
   ]);
 
   let privateRecords = {};
@@ -35,6 +36,7 @@ hexo.extend.filter.register('after_generate', async function () {
     publicRecords[id] = {
       visited: true,
       time: String(record.time || '').trim(),
+      notes: String(record.notes || '').trim(),
     };
   }
   const unitsPrefix = 'window.HERITAGE_UNITS=';
@@ -49,6 +51,7 @@ hexo.extend.filter.register('after_generate', async function () {
   const publishedIndex = indexHtml
     .replace('href="./styles.css"', `href="./styles.css?v=${contentVersion(stylesCss)}"`)
     .replace('src="./data/runtime.js"', `src="./data/runtime.js?v=${contentVersion(runtime)}"`)
+    .replace('src="./data/divisions.js"', `src="./data/divisions.js?v=${contentVersion(divisionsJs)}"`)
     .replace('src="./data/units.js"', `src="./data/units.js?v=${contentVersion(publicUnitsJs)}"`)
     .replace('src="./app.js"', `src="./app.js?v=${contentVersion(appJs)}"`);
 
@@ -59,6 +62,7 @@ hexo.extend.filter.register('after_generate', async function () {
     fs.writeFile(path.join(outputRoot, 'app.js'), appJs, 'utf8'),
     fs.writeFile(path.join(outputRoot, 'styles.css'), stylesCss, 'utf8'),
     fs.writeFile(path.join(outputData, 'units.js'), publicUnitsJs, 'utf8'),
+    fs.writeFile(path.join(outputData, 'divisions.js'), divisionsJs, 'utf8'),
     fs.writeFile(path.join(outputData, 'runtime.js'), runtime, 'utf8'),
   ]);
   hexo.log.info(`[国保足迹] 已发布 ${Object.keys(publicRecords).length} 条到访记录到 /heritage/`);

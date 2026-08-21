@@ -17,7 +17,13 @@ const mimeTypes = {
 };
 
 const unitsSource = await readFile(resolve(appRoot, "data", "units.js"), "utf8");
-const knownIds = new Set([...unitsSource.matchAll(/"id":"([^"]+)"/g)].map((match) => match[1]));
+const unitsPrefix = "window.HERITAGE_UNITS=";
+const trimmedUnits = unitsSource.trim();
+if (!trimmedUnits.startsWith(unitsPrefix) || !trimmedUnits.endsWith(";")) {
+  throw new Error("data/units.js 格式无效");
+}
+const units = JSON.parse(trimmedUnits.slice(unitsPrefix.length, -1));
+const knownIds = new Set(units.flatMap((unit) => unit.record_ids || [unit.id]));
 
 function sanitizeRecords(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};

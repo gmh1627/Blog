@@ -80,7 +80,7 @@ summary:focus-visible {
 }
 
 .app-header h1 {
-  margin: 2px 0 0;
+  margin: 8px 0 0;
   font-family: var(--font-serif);
   font-size: 31px;
   font-weight: 700;

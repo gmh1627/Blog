@@ -710,7 +710,7 @@ input[role="switch"]:checked::after {
   color: var(--muted);
 }
 
-.result-toolbar label {
+.result-page-tools label {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -725,8 +725,18 @@ input[role="switch"]:checked::after {
   gap: 7px;
 }
 
-.result-toolbar select {
+.result-page-tools select {
   width: 78px;
+}
+
+.result-footer {
+  margin-top: 24px;
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .page-step {
@@ -761,7 +771,7 @@ input[role="switch"]:checked::after {
   font-variant-numeric: tabular-nums;
 }
 
-.result-toolbar .page-jump {
+.result-page-tools .page-jump {
   margin-left: 6px;
   gap: 5px;
 }
@@ -872,6 +882,14 @@ input[role="switch"]:checked::after {
 
 .col-location {
   width: 25%;
+}
+
+.location-current {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .col-time {
@@ -1018,8 +1036,8 @@ input[role="switch"]:checked::after {
 }
 
 .pagination {
-  min-height: 46px;
-  margin-top: 24px;
+  min-height: 36px;
+  margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1331,6 +1349,23 @@ footer {
     padding: 16px 14px;
   }
 
+  .segmented,
+  .segmented button,
+  .batch-grid,
+  .batch-filter {
+    min-width: 0;
+  }
+
+  .segmented button {
+    padding-left: 5px;
+    padding-right: 5px;
+    white-space: normal;
+  }
+
+  .batch-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .results {
     padding: 18px 14px 44px;
   }
@@ -1340,13 +1375,13 @@ footer {
     gap: 1px 12px;
   }
 
-  .result-toolbar {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
   .result-page-tools {
     width: 100%;
+  }
+
+  .result-footer {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .result-page-tools label {
@@ -1357,7 +1392,7 @@ footer {
     margin-right: auto;
   }
 
-  .result-toolbar .page-jump {
+  .result-page-tools .page-jump {
     margin-left: 0;
   }
 

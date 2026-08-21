@@ -13,6 +13,7 @@
     "上海市", "江苏省", "浙江省", "安徽省", "福建省", "江西省", "山东省", "河南省", "湖北省",
     "湖南省", "广东省", "广西壮族自治区", "海南省", "重庆市", "四川省", "贵州省", "云南省",
     "西藏自治区", "陕西省", "甘肃省", "青海省", "宁夏回族自治区", "新疆维吾尔自治区",
+    "跨省级行政区",
   ];
   const periodOrder = [
     "史前", "夏商周", "秦汉", "魏晋南北朝", "隋唐五代", "宋辽金西夏",
@@ -62,9 +63,11 @@
     status: "visited",
     group: "province",
     batches: new Set([1, 2, 3, 4, 5, 6, 7, 8]),
-    province: isStatisticsView
-      ? "all"
-      : (provinceOrder.includes(urlParams.get("province")) ? urlParams.get("province") : "北京市"),
+    province: provinceOrder.includes(urlParams.get("province"))
+      ? urlParams.get("province")
+      : "all",
+    city: "all",
+    district: "all",
     category: "all",
     period: "all",
     includeMerged: false,
@@ -85,6 +88,8 @@
     batchFilters: document.querySelector("#batchFilters"),
     allBatchesButton: document.querySelector("#allBatchesButton"),
     provinceFilter: document.querySelector("#provinceFilter"),
+    cityFilter: document.querySelector("#cityFilter"),
+    districtFilter: document.querySelector("#districtFilter"),
     categoryFilter: document.querySelector("#categoryFilter"),
     periodFilter: document.querySelector("#periodFilter"),
     mergedToggle: document.querySelector("#mergedToggle"),
@@ -230,6 +235,57 @@
     toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 2600);
   }
 
+  function updateCityFilter() {
+    if (state.province === "all") {
+      state.city = "all";
+      elements.cityFilter.innerHTML = '<option value="all">请先选择省份</option>';
+      elements.cityFilter.disabled = true;
+      updateDistrictFilter();
+      return;
+    }
+
+    const cities = [...new Set(units
+      .filter((unit) => unit.province === state.province && unit.city)
+      .map((unit) => unit.city))]
+      .sort((a, b) => {
+        if (a === "跨地级行政区") return 1;
+        if (b === "跨地级行政区") return -1;
+        return collator.compare(a, b);
+      });
+    if (!cities.includes(state.city)) state.city = "all";
+    elements.cityFilter.innerHTML = [
+      '<option value="all">全部地级市 / 州</option>',
+      ...cities.map((city) => `<option value="${escapeHtml(city)}">${escapeHtml(city)}</option>`),
+    ].join("");
+    elements.cityFilter.value = state.city;
+    elements.cityFilter.disabled = false;
+    updateDistrictFilter();
+  }
+
+  function updateDistrictFilter() {
+    if (state.province === "all" || state.city === "all") {
+      state.district = "all";
+      elements.districtFilter.innerHTML = '<option value="all">请先选择地级市 / 州</option>';
+      elements.districtFilter.disabled = true;
+      return;
+    }
+    const districts = [...new Set(units
+      .filter((unit) => unit.province === state.province && unit.city === state.city && unit.district)
+      .map((unit) => unit.district))]
+      .sort((a, b) => {
+        if (a === "跨县级行政区" || a === "不设县级行政区") return 1;
+        if (b === "跨县级行政区" || b === "不设县级行政区") return -1;
+        return collator.compare(a, b);
+      });
+    if (!districts.includes(state.district)) state.district = "all";
+    elements.districtFilter.innerHTML = [
+      '<option value="all">全部区 / 县</option>',
+      ...districts.map((district) => `<option value="${escapeHtml(district)}">${escapeHtml(district)}</option>`),
+    ].join("");
+    elements.districtFilter.value = state.district;
+    elements.districtFilter.disabled = false;
+  }
+
   function initializeControls() {
     elements.recordsView.hidden = isStatisticsView;
     elements.statisticsView.hidden = !isStatisticsView;
@@ -257,6 +313,7 @@
       ...provinces.map((province) => `<option value="${escapeHtml(province)}">${escapeHtml(province)}</option>`),
     ].join("");
     elements.provinceFilter.value = state.province;
+    updateCityFilter();
 
     const categories = [...new Set(units.map((unit) => unit.category))]
       .sort((a, b) => collator.compare(a, b));
@@ -277,13 +334,15 @@
     if (unit.kind === "merged" && !state.includeMerged) return false;
     if (!state.batches.has(unit.batch)) return false;
     if (state.province !== "all" && unit.province !== state.province) return false;
+    if (state.city !== "all" && unit.city !== state.city) return false;
+    if (state.district !== "all" && unit.district !== state.district) return false;
     if (state.category !== "all" && unit.category !== state.category) return false;
     if (state.period !== "all" && unit.period !== state.period) return false;
     const record = recordFor(unit.id);
     if (state.status === "visited" && !record.visited) return false;
     if (state.status === "unvisited" && record.visited) return false;
     if (state.query) {
-      const haystack = `${unit.name} ${unit.alias || ""} ${unit.code} ${unit.location} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
+      const haystack = `${unit.name} ${unit.alias || ""} ${unit.code} ${unit.province || ""} ${unit.city || ""} ${unit.district || ""} ${unit.era} ${unit.period} ${unit.category} ${unit.remark}`.toLocaleLowerCase("zh-CN");
       if (!haystack.includes(state.query)) return false;
     }
     return true;
@@ -327,7 +386,9 @@
   function renderStats() {
     const independent = units.filter((unit) => unit.kind === "unit");
     const visited = independent.filter((unit) => recordFor(unit.id).visited);
-    const visitedProvinces = new Set(visited.map((unit) => unit.province));
+    const visitedProvinces = new Set(
+      visited.map((unit) => unit.province).filter((province) => province !== "跨省级行政区"),
+    );
     elements.totalStat.textContent = formatNumber(independent.length);
     elements.visitedStat.textContent = formatNumber(visited.length);
     elements.provinceStat.textContent = formatNumber(visitedProvinces.size);
@@ -470,7 +531,9 @@
       </td>
       <td class="col-batch"><span class="batch-badge">${unit.batch}</span></td>
       <td class="col-category">${escapeHtml(unit.category)}<span class="period-label">${escapeHtml(unit.era || unit.period)}</span></td>
-      <td class="col-location">${escapeHtml(unit.location)}</td>
+      <td class="col-location">
+        <span class="location-current">${escapeHtml(unit.province)} · ${escapeHtml(unit.city)} · ${escapeHtml(unit.district)}</span>
+      </td>
       <td class="col-time"><input class="visit-time-input" type="text" value="${escapeHtml(record.time)}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}></td>
       <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail">${readOnly ? "查看" : "备注"}</button></td>
     </tr>`;
@@ -484,7 +547,7 @@
         <table class="heritage-table">
           <thead><tr>
             <th class="col-check">到访</th><th class="col-name">名称</th><th class="col-batch">批次</th>
-            <th class="col-category">类别 / 年代</th><th class="col-location">地址</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
+            <th class="col-category">类别 / 年代</th><th class="col-location">现行三级区划</th><th class="col-time">到访时间</th><th class="col-actions">记录</th>
           </tr></thead>
           <tbody>${groupUnits.map(renderRow).join("")}</tbody>
         </table>
@@ -580,13 +643,16 @@
     state.status = "visited";
     state.group = "province";
     state.batches = new Set([1, 2, 3, 4, 5, 6, 7, 8]);
-    state.province = "北京市";
+    state.province = "all";
+    state.city = "all";
+    state.district = "all";
     state.category = "all";
     state.period = "all";
     state.includeMerged = false;
     state.page = 1;
     elements.searchInput.value = "";
-    elements.provinceFilter.value = "北京市";
+    elements.provinceFilter.value = "all";
+    updateCityFilter();
     elements.categoryFilter.value = "all";
     elements.periodFilter.value = "all";
     elements.mergedToggle.checked = false;
@@ -597,7 +663,7 @@
     renderResults();
   }
 
-  function openDetail(id) {
+  function openDetail(id, options = {}) {
     const unit = unitById.get(id);
     if (!unit) return;
     const record = recordFor(id);
@@ -607,18 +673,21 @@
     const facts = [
       ["类别", unit.category, false],
       ["年代", unit.period, false],
-      ["地址", unit.location, true],
+      ["省级", unit.province, false],
+      ["地级", unit.city, false],
+      ["县级", unit.district, false],
     ];
     if (unit.alias) facts.splice(1, 0, ["别名", unit.alias, false]);
     if (unit.remark) facts.push(["备注", unit.remark, true]);
     elements.dialogFacts.innerHTML = facts.map(([label, value, wide]) =>
       `<div class="dialog-fact${wide ? " wide" : ""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`
     ).join("");
-    elements.dialogVisited.checked = record.visited;
+    elements.dialogVisited.checked = options.visited ?? record.visited;
     elements.dialogTime.value = record.time;
     elements.dialogNotes.value = record.notes;
     elements.dialogSource.href = unit.source;
     if (typeof elements.detailDialog.showModal === "function") elements.detailDialog.showModal();
+    if (options.focusTime) elements.dialogTime.focus();
   }
 
   function saveDetail() {
@@ -661,11 +730,11 @@
 
   function exportCsv() {
     const filtered = sortedFilteredUnits();
-    const headers = ["编号", "名称", "别名", "批次", "公布年份", "省份", "类别", "年代", "地址", "项目类型", "并入备注", "是否去过", "到访时间", "个人备注"];
+    const headers = ["编号", "名称", "别名", "批次", "公布年份", "现行省级", "现行地级", "现行县级", "类别", "年代", "项目类型", "并入备注", "是否去过", "到访时间", "个人备注"];
     const rows = filtered.map((unit) => {
       const record = recordFor(unit.id);
       return [
-        unit.code, unit.name, unit.alias || "", unit.batch, unit.year, unit.province, unit.category, unit.period, unit.location,
+        unit.code, unit.name, unit.alias || "", unit.batch, unit.year, unit.province, unit.city || "", unit.district || "", unit.category, unit.period,
         unit.kind === "unit" ? "独立国保" : "并入项目", unit.remark, record.visited ? "是" : "否", record.time, record.notes,
       ].map(csvCell).join(",");
     });
@@ -764,7 +833,22 @@
 
     elements.provinceFilter.addEventListener("change", () => {
       state.province = elements.provinceFilter.value;
+      state.city = "all";
+      state.district = "all";
+      updateCityFilter();
       renderProvinceProgress();
+      resetPageAndRender();
+    });
+
+    elements.cityFilter.addEventListener("change", () => {
+      state.city = elements.cityFilter.value;
+      state.district = "all";
+      updateDistrictFilter();
+      resetPageAndRender();
+    });
+
+    elements.districtFilter.addEventListener("change", () => {
+      state.district = elements.districtFilter.value;
       resetPageAndRender();
     });
 
@@ -804,7 +888,10 @@
         return;
       }
       state.province = state.province === button.dataset.province ? "all" : button.dataset.province;
+      state.city = "all";
+      state.district = "all";
       elements.provinceFilter.value = state.province;
+      updateCityFilter();
       renderProvinceProgress();
       resetPageAndRender();
       document.querySelector(".result-toolbar").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -820,6 +907,11 @@
       const row = event.target.closest("tr[data-id]");
       if (!row) return;
       if (event.target.matches(".visit-checkbox")) {
+        if (state.status === "unvisited" && event.target.checked && !readOnly) {
+          event.target.checked = false;
+          openDetail(row.dataset.id, { visited: true, focusTime: true });
+          return;
+        }
         updateRecord(row.dataset.id, { visited: event.target.checked });
         renderAll();
       }

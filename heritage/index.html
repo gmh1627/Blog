@@ -18,7 +18,7 @@
     </div>
     <div class="header-actions">
       <nav class="view-nav" aria-label="页面导航">
-        <a class="button secondary" id="recordsViewLink" href="./index.html">名录与记录</a>
+        <a class="button secondary" id="recordsViewLink" href="./index.html">名录</a>
         <a class="button secondary" id="statisticsViewLink" href="./index.html?view=stats">到访统计</a>
       </nav>
       <details class="data-menu">
@@ -138,6 +138,16 @@
         </label>
 
         <label class="filter-section field-label">
+          <span>地级市 / 州</span>
+          <select id="cityFilter" disabled></select>
+        </label>
+
+        <label class="filter-section field-label">
+          <span>区 / 县</span>
+          <select id="districtFilter" disabled></select>
+        </label>
+
+        <label class="filter-section field-label">
           <span>类别</span>
           <select id="categoryFilter"></select>
         </label>
@@ -161,6 +171,11 @@
       <section class="results" aria-label="文物保护单位列表">
         <div class="result-toolbar">
           <p id="resultCount" aria-live="polite"></p>
+        </div>
+
+        <div id="resultGroups"></div>
+        <div class="result-footer">
+          <nav class="pagination" id="pagination" aria-label="翻页"></nav>
           <div class="result-page-tools">
             <label>
               每页
@@ -181,9 +196,6 @@
             <button id="pageJumpButton" class="button secondary page-jump-button" type="button">跳转</button>
           </div>
         </div>
-
-        <div id="resultGroups"></div>
-        <nav class="pagination" id="pagination" aria-label="翻页"></nav>
       </section>
     </div>
   </main>

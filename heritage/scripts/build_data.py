@@ -9,11 +9,13 @@ government documents. Run this script from any working directory.
 from __future__ import annotations
 
 import csv
+import io
 import json
 import re
 import subprocess
 import tempfile
-from collections import Counter
+import xml.etree.ElementTree as ET
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import requests
@@ -24,8 +26,14 @@ from urllib3.util.retry import Retry
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
+CACHE_DIR = DATA_DIR / ".cache"
 WIKISOURCE_API = "https://zh.wikisource.org/w/api.php"
 SOURCE_REPOSITORY = "https://github.com/lingdian1226/china-cultural-heritage.git"
+CURRENT_DIVISIONS_URL = (
+    "https://raw.githubusercontent.com/wujingke/division_codes/main/output/csv/division_codes.csv"
+)
+HISTORICAL_DIVISIONS_URL = "https://raw.githubusercontent.com/yescallop/areacodes/master/result.csv"
+HERITAGE_KML_URL = "https://cultural.rainywhisper.com/data/CulRelPro_China_1961-2019.kml"
 
 PAGES = {
     1: "国务院关于公布第一批全国重点文物保护单位名单的通知",
@@ -84,6 +92,7 @@ NAME_OVERRIDES = {
     "北京城东南角楼一作“北京市城东南角楼”": ("北京城东南角楼", ""),
     "大士阁一作“大土阁”": ("大士阁", "大土阁"),
     "真覚寺金刚宝座（五塔寺塔）": ("真觉寺金刚宝座（五塔寺塔）", ""),
+    "楡林窟": ("榆林窟", ""),
 }
 
 PERIOD_OVERRIDES = {
@@ -91,6 +100,147 @@ PERIOD_OVERRIDES = {
     "大运河": "隋唐五代",
 }
 
+BASE_REMARK_OVERRIDES = {
+    "3-0064-3-012": "第六批与宣化城墙合并，名称：宣化古城；镇朔楼已于第四批归入清远楼",
+}
+
+# Items whose notices and auxiliary datasets do not contain a usable current
+# county, or whose auxiliary county is known to be incorrect.
+CURRENT_LOCATION_OVERRIDES = {
+    "1-0039-4-006": ("甘肃省", "临夏回族自治州", "永靖县"),
+    "1-0069-3-022": ("河南省", "开封市", "顺河回族区"),
+    "1-0088-3-041": ("山西省", "大同市", "平城区"),
+    "1-0091-3-044": ("山西省", "大同市", "平城区"),
+    "1-0100-3-053": ("北京市", "北京市", "东城区"),
+    "2-0029-3-014": ("北京市", "北京市", "东城区"),
+    "2-0035-3-020": ("北京市", "北京市", "东城区"),
+    "3-0003-5-003": ("江苏省", "南京市", "秦淮区"),
+    "3-0020-5-020": ("广东省", "广州市", "越秀区"),
+    "3-0057-3-005": ("四川省", "自贡市", "大安区"),
+    "3-0218-1-038": ("河南省", "开封市", "龙亭区"),
+    "4-0099-3-021": ("山西省", "阳泉市", "郊区"),
+    "4-0175-3-097": ("河南省", "开封市", "跨县级行政区"),
+    "4-0186-3-108": ("云南省", "迪庆藏族自治州", "香格里拉市"),
+    "4-0249-6-001": ("四川省", "泸州市", "江阳区"),
+    "5-0098-1-098": ("海南省", "三亚市", "吉阳区"),
+    "5-0160-2-016": ("江苏省", "南京市", "雨花台区"),
+    "5-0225-3-031": ("山西省", "大同市", "平城区"),
+    "5-0232-3-038": ("山西省", "长治市", "潞州区"),
+    "5-0233-3-039": ("山西省", "长治市", "潞州区"),
+    "5-0339-3-145": ("河南省", "开封市", "龙亭区"),
+    "5-0447-4-005": ("江苏省", "南京市", "栖霞区"),
+    "6-0175-1-175": ("海南省", "三沙市", "西沙区"),
+    "6-0272-2-052": ("海南省", "三亚市", "海棠区"),
+    "6-0474-3-177": ("山西省", "长治市", "潞州区"),
+    "6-0654-3-357": ("河南省", "开封市", "顺河回族区"),
+    "6-0984-5-111": ("河南省", "开封市", "龙亭区"),
+    "6-1070-5-197": ("甘肃省", "兰州市", "城关区"),
+    "7-0400-1-400": ("海南省", "三沙市", "西沙区"),
+    "7-0808-3-106": ("山西省", "大同市", "平城区"),
+    "7-1293-3-591": ("海南省", "三亚市", "崖州区"),
+    "8-0122-1-122": ("海南省", "三沙市", "西沙区"),
+    "8-0124-1-124": ("海南省", "三沙市", "西沙区"),
+    "1-0028-5-028": ("重庆市", "重庆市", "渝中区"),
+    "3-0163-3-111": ("重庆市", "重庆市", "沙坪坝区"),
+    "3-0113-3-061": ("山西省", "晋城市", "泽州县"),
+    "3-0118-3-066": ("西藏自治区", "日喀则市", "桑珠孜区"),
+    "3-0159-3-107": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "3-0241-2-012": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "4-0151-3-073": ("广东省", "潮州市", "湘桥区"),
+    "4-0218-5-020": ("广东省", "湛江市", "麻章区"),
+    "5-0062-1-062": ("山东省", "菏泽市", "牡丹区"),
+    "5-0141-1-141": ("新疆维吾尔自治区", "哈密市", "伊州区"),
+    "5-0144-1-144": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "5-0189-2-045": ("新疆维吾尔自治区", "哈密市", "伊州区"),
+    "5-0377-3-183": ("广东省", "潮州市", "湘桥区"),
+    "5-0480-5-007": ("黑龙江省", "黑河市", "爱辉区"),
+    "6-0290-2-070": ("新疆维吾尔自治区", "哈密市", "伊州区"),
+    "6-0297-2-077": ("新疆维吾尔自治区", "哈密市", "伊州区"),
+    "6-0942-5-069": ("江苏省", "淮安市", "淮安区"),
+    "6-1077-5-204": ("新疆维吾尔自治区", "吐鲁番市", "跨县级行政区"),
+    "merge-4-001": ("河北省", "张家口市", "宣化区"),
+    "merge-4-010": ("陕西省", "延安市", "宝塔区"),
+    "merge-4-011": ("陕西省", "延安市", "宝塔区"),
+    "merge-5-008": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "merge-5-014": ("四川省", "巴中市", "巴州区"),
+    "merge-5-015": ("福建省", "泉州市", "丰泽区"),
+    "merge-5-022": ("浙江省", "嘉兴市", "南湖区"),
+    "merge-6-004": ("江苏省", "宿迁市", "宿城区"),
+    "merge-6-017": ("河北省", "张家口市", "宣化区"),
+    "merge-6-035": ("河北省", "张家口市", "宣化区"),
+    "merge-6-041": ("四川省", "乐山市", "市中区"),
+    "merge-6-053": ("甘肃省", "天水市", "麦积区"),
+    "merge-6-057": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "merge-6-066": ("浙江省", "绍兴市", "越城区"),
+    "merge-6-102": ("陕西省", "延安市", "宝塔区"),
+    "merge-6-103": ("陕西省", "延安市", "宝塔区"),
+    "merge-6-104": ("陕西省", "延安市", "宝塔区"),
+    "merge-6-105": ("陕西省", "延安市", "宝塔区"),
+    "merge-6-106": ("陕西省", "延安市", "宝塔区"),
+    "1-0023-5-023": ("陕西省", "延安市", "宝塔区"),
+    "1-0168-2-007": ("吉林省", "通化市", "集安市"),
+    "3-0172-4-009": ("重庆市", "重庆市", "涪陵区"),
+    "3-0184-1-004": ("安徽省", "马鞍山市", "和县"),
+    "5-0045-1-045": ("安徽省", "马鞍山市", "含山县"),
+    "5-0156-2-012": ("辽宁省", "沈阳市", "法库县"),
+    "5-0456-4-014": ("河南省", "三门峡市", "义马市"),
+    "6-0252-2-032": ("安徽省", "马鞍山市", "当涂县"),
+    "7-0816-3-114": ("山西省", "长治市", "潞州区"),
+    "7-0844-3-142": ("山西省", "长治市", "潞州区"),
+    "8-0090-1-090": ("河南省", "三门峡市", "义马市"),
+    "8-0177-2-010": ("安徽省", "马鞍山市", "当涂县"),
+    "3-0072-3-020": ("四川省", "阿坝藏族羌族自治州", "马尔康市"),
+    "5-0185-2-041": ("甘肃省", "跨地级行政区", "跨县级行政区"),
+    "5-0384-3-190": ("四川省", "阿坝藏族羌族自治州", "马尔康市"),
+    "6-0506-3-209": ("江苏省", "淮安市", "跨县级行政区"),
+    "7-0404-1-404": ("四川省", "阿坝藏族羌族自治州", "马尔康市"),
+    "7-1317-3-615": ("四川省", "阿坝藏族羌族自治州", "马尔康市"),
+    "7-1318-3-616": ("四川省", "阿坝藏族羌族自治州", "马尔康市"),
+    "7-1607-4-110": ("新疆维吾尔自治区", "吐鲁番市", "高昌区"),
+    "8-0258-3-061": ("山西省", "晋城市", "城区"),
+    "6-0531-3-234": ("江苏省", "淮安市", "淮安区"),
+    "6-0969-5-096": ("福建省", "漳州市", "芗城区"),
+    "5-0177-2-033": ("四川省", "眉山市", "彭山区"),
+    "merge-6-032": ("四川省", "眉山市", "彭山区"),
+    "7-0389-1-389": ("广东省", "东莞市", "不设县级行政区"),
+    "merge-4-006": ("河南省", "开封市", "禹王台区"),
+    "merge-4-007": ("河南省", "开封市", "鼓楼区"),
+    "merge-5-004": ("江西省", "景德镇市", "浮梁县"),
+    "merge-5-012": ("江苏省", "苏州市", "姑苏区"),
+    "merge-5-016": ("江西省", "九江市", "庐山市"),
+    "merge-5-017": ("江苏省", "南京市", "跨县级行政区"),
+    "merge-5-018": ("江苏省", "南通市", "崇川区"),
+    "merge-5-021": ("浙江省", "宁波市", "江北区"),
+    "merge-6-005": ("江苏省", "徐州市", "鼓楼区"),
+    "merge-6-010": ("河南省", "郑州市", "惠济区"),
+    "merge-6-013": ("广东省", "广州市", "越秀区"),
+    "merge-6-014": ("广东省", "韶关市", "曲江区"),
+    "merge-6-016": ("陕西省", "铜川市", "印台区"),
+    "merge-6-018": ("辽宁省", "辽阳市", "跨县级行政区"),
+    "merge-6-019": ("辽宁省", "辽阳市", "跨县级行政区"),
+    "merge-6-023": ("江苏省", "南京市", "跨县级行政区"),
+    "merge-6-024": ("浙江省", "杭州市", "西湖区"),
+    "merge-6-028": ("湖北省", "荆州市", "沙市区"),
+    "merge-6-029": ("湖北省", "荆州市", "荆州区"),
+    "merge-6-033": ("四川省", "成都市", "跨县级行政区"),
+    "merge-6-046": ("浙江省", "杭州市", "西湖区"),
+    "merge-6-049": ("四川省", "广元市", "利州区"),
+    "merge-6-052": ("陕西省", "铜川市", "耀州区"),
+    "merge-6-063": ("江苏省", "南通市", "崇川区"),
+    "merge-6-064": ("浙江省", "杭州市", "上城区"),
+    "merge-6-092": ("江西省", "萍乡市", "安源区"),
+    "merge-6-093": ("江西省", "萍乡市", "安源区"),
+    "merge-6-095": ("山东省", "青岛市", "跨县级行政区"),
+    "merge-6-097": ("广西壮族自治区", "北海市", "海城区"),
+    "merge-6-098": ("四川省", "广安市", "广安区"),
+    "merge-6-100": ("四川省", "泸州市", "江阳区"),
+}
+
+MUNICIPALITIES = {"北京市", "天津市", "上海市", "重庆市"}
+GENERIC_PREFECTURE_LABELS = {
+    "省直辖县级行政区划": "省直辖县级行政区",
+    "自治区直辖县级行政区划": "自治区直辖县级行政区",
+}
 
 def http_session() -> requests.Session:
     session = requests.Session()
@@ -132,6 +282,12 @@ def normalize_name(value: str) -> tuple[str, str]:
     if match:
         return match.group(1), match.group(2)
     return name.replace("覚", "觉"), ""
+
+
+def heritage_name_key(value: str) -> str:
+    name, _ = normalize_name(value)
+    name = name.replace("造象", "造像").replace("旧阯", "旧址")
+    return re.sub(r"[^0-9A-Za-z\u4e00-\u9fff]", "", name)
 
 
 def classify_period(era: str, name: str = "") -> str:
@@ -209,6 +365,271 @@ def primary_province(address: str) -> str:
     return "其他"
 
 
+def region_base(value: str) -> str:
+    return re.sub(r"(自治州|地区|自治县|特区|林区|矿区|新区|市|县|区|旗|盟)$", "", clean(value))
+
+
+def fetch_csv(session: requests.Session, url: str) -> list[dict[str, str]]:
+    filename = "current-divisions.csv" if url == CURRENT_DIVISIONS_URL else "historical-divisions.csv"
+    return list(csv.DictReader(io.StringIO(fetch_cached(session, url, filename).decode("utf-8-sig"))))
+
+
+def fetch_cached(session: requests.Session, url: str, filename: str) -> bytes:
+    path = CACHE_DIR / filename
+    if path.exists():
+        return path.read_bytes()
+    response = session.get(url, timeout=180)
+    response.raise_for_status()
+    CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(response.content)
+    return response.content
+
+
+def load_admin_divisions(session: requests.Session) -> dict:
+    current_rows = fetch_csv(session, CURRENT_DIVISIONS_URL)
+    historical_rows = fetch_csv(session, HISTORICAL_DIVISIONS_URL)
+    heritage_kml = fetch_cached(session, HERITAGE_KML_URL, "heritage-locations.kml")
+    point_code_path = DATA_DIR / "location_codes.json"
+    point_codes = json.loads(point_code_path.read_text(encoding="utf-8")) if point_code_path.exists() else {}
+
+    provinces_by_code = {
+        row["code_6"]: row["name"] for row in current_rows if row["level"] == "1"
+    }
+    cities_by_code = {
+        row["code_6"]: row["name"] for row in current_rows if row["level"] == "2"
+    }
+    counties_by_code = {}
+    prefectures = defaultdict(set)
+    county_parent_codes = set()
+    for row in current_rows:
+        if row["level"] != "3":
+            continue
+        code = row["code_6"]
+        province = provinces_by_code.get(f"{code[:2]}0000")
+        district = row["name"]
+        if not province:
+            continue
+        if province in MUNICIPALITIES:
+            city = province
+        else:
+            city = cities_by_code.get(row["parent_code_6"])
+            if not city:
+                city = "自治区直辖县级行政区" if province.endswith("自治区") else "省直辖县级行政区"
+            city = GENERIC_PREFECTURE_LABELS.get(city, city)
+        location = {"province": province, "city": city, "district": district}
+        counties_by_code[code] = location
+        prefectures[province].add(city)
+        county_parent_codes.add(row["parent_code_6"])
+
+    direct_prefectures = set()
+    for code, city in cities_by_code.items():
+        province = provinces_by_code.get(f"{code[:2]}0000")
+        if not province:
+            continue
+        prefectures[province].add(city)
+        if code not in county_parent_codes:
+            direct_prefectures.add((province, city))
+
+    successors = {}
+    county_rows = []
+    for row in historical_rows:
+        if row["级别"] != "县级":
+            continue
+        county_rows.append(row)
+        successors[row["代码"]] = re.findall(r"\d{6}", row["新代码"])
+
+    def current_successors(code: str, seen: frozenset[str] = frozenset()) -> set[str]:
+        if code in counties_by_code:
+            return {code}
+        if code in seen:
+            return set()
+        results = set()
+        for next_code in successors.get(code, []):
+            results.update(current_successors(next_code, seen | {code}))
+        return results
+
+    aliases = defaultdict(set)
+    alias_context = defaultdict(lambda: defaultdict(set))
+    for code, location in counties_by_code.items():
+        aliases[location["district"]].add(code)
+        alias_context[location["district"]][location["province"]].add(code)
+    for row in county_rows:
+        name = clean(row["名称"])
+        aliases[name]
+        targets = current_successors(row["代码"])
+        if not targets:
+            continue
+        aliases[name].update(targets)
+        alias_context[name][clean(row["一级行政区"])].update(targets)
+
+    ignored_aliases = {"市辖区", "城区", "郊区", "矿区", "新区", "市区", "县"}
+    alias_names = sorted(
+        (name for name in aliases if len(name) >= 2 and name not in ignored_aliases),
+        key=len,
+        reverse=True,
+    )
+    heritage_references = defaultdict(list)
+    heritage_references_by_name = defaultdict(list)
+    heritage_references_by_key = defaultdict(list)
+    pack_numbers = {
+        "第一批": 1, "第二批": 2, "第三批": 3, "第四批": 4,
+        "第五批": 5, "第六批": 6, "第七批": 7, "第八批": 8,
+    }
+    root = ET.fromstring(heritage_kml)
+    namespace = {"kml": "http://www.opengis.net/kml/2.2"}
+    for placemark in root.findall(".//kml:Placemark", namespace):
+        values = {
+            field.attrib.get("name", ""): clean(field.text or "")
+            for field in placemark.findall(".//kml:SimpleData", namespace)
+        }
+        code = values.get("Cnum", "")
+        if code:
+            heritage_references[code].append(values)
+        reference_name, _ = normalize_name(values.get("NameCN", ""))
+        batch = pack_numbers.get(values.get("PackCN", ""))
+        if batch and reference_name:
+            heritage_references_by_name[(batch, reference_name)].append(values)
+            heritage_references_by_key[(batch, heritage_name_key(reference_name))].append(values)
+    return {
+        "counties_by_code": counties_by_code,
+        "aliases": aliases,
+        "alias_context": alias_context,
+        "alias_names": alias_names,
+        "prefectures": prefectures,
+        "direct_prefectures": direct_prefectures,
+        "all_prefecture_names": {name for names in prefectures.values() for name in names},
+        "heritage_references": heritage_references,
+        "heritage_references_by_name": heritage_references_by_name,
+        "heritage_references_by_key": heritage_references_by_key,
+        "point_codes": point_codes,
+    }
+
+
+def summarize_locations(codes: set[str], admin: dict) -> dict[str, str] | None:
+    locations = [admin["counties_by_code"][code] for code in sorted(codes) if code in admin["counties_by_code"]]
+    if not locations:
+        return None
+    provinces = sorted({item["province"] for item in locations})
+    if len(provinces) > 1:
+        return {"province": "跨省级行政区", "city": "跨地级行政区", "district": "跨县级行政区"}
+    cities = sorted({item["city"] for item in locations})
+    if len(cities) > 1:
+        return {"province": provinces[0], "city": "跨地级行政区", "district": "跨县级行政区"}
+    districts = sorted({item["district"] for item in locations})
+    return {
+        "province": provinces[0],
+        "city": cities[0],
+        "district": districts[0] if len(districts) == 1 else "跨县级行政区",
+    }
+
+
+def resolve_current_location(
+    heritage_code: str,
+    batch: int,
+    name: str,
+    original_province: str,
+    raw_city: str,
+    raw_district: str,
+    notice_location: str,
+    admin: dict,
+) -> dict[str, str]:
+    override = CURRENT_LOCATION_OVERRIDES.get(heritage_code)
+    if override:
+        return dict(zip(("province", "city", "district"), override))
+    if not re.search(r"[、，,及和]", notice_location):
+        point_location = summarize_locations(set(admin["point_codes"].get(heritage_code, [])), admin)
+        notice_province = primary_province(notice_location)
+        if point_location and (
+            notice_province not in PROVINCES or point_location["province"] == notice_province
+        ):
+            return point_location
+    references = [
+        *admin["heritage_references"].get(heritage_code, []),
+        *admin["heritage_references_by_name"].get((batch, name), []),
+        *admin["heritage_references_by_key"].get((batch, heritage_name_key(name)), []),
+    ]
+    source_province = clean(original_province) or primary_province(notice_location)
+    notice_province = primary_province(notice_location)
+    notice_cities = [
+        city
+        for city in admin["prefectures"].get(notice_province, set())
+        if city in notice_location
+    ]
+    notice_city = notice_cities[0] if len(notice_cities) == 1 else ""
+    hints = [
+        (clean(raw_district), source_province, notice_city or clean(raw_city)),
+        (clean(notice_location), notice_province, notice_city),
+        (clean(raw_city), source_province, notice_city),
+        *(
+            (
+                reference.get("CADCN", ""),
+                reference.get("PADCN", ""),
+                reference.get("MADCN", ""),
+            )
+            for reference in references
+        ),
+        *((reference.get("AddCN", ""), source_province, "") for reference in references),
+        (clean(name), source_province, clean(raw_city)),
+    ]
+    mentioned_provinces = {province for province in PROVINCES if province in notice_location}
+    if len(mentioned_provinces) > 1:
+        return {"province": "跨省级行政区", "city": "跨地级行政区", "district": "跨县级行政区"}
+
+    for hint, province_context, city_context in hints:
+        if not hint:
+            continue
+        normalized_hint = hint
+        for province_name in PROVINCES:
+            normalized_hint = normalized_hint.replace(province_name, "")
+        if normalized_hint in admin["all_prefecture_names"]:
+            continue
+        hint = hint.replace("扎达县", "札达县").replace("浮粱县", "浮梁县")
+        matches = [
+            alias
+            for alias in admin["alias_names"]
+            if alias in hint and alias not in admin["all_prefecture_names"]
+        ]
+        if not matches:
+            continue
+        longest = len(matches[0])
+        matches = [alias for alias in matches if len(alias) == longest]
+        codes = set()
+        for alias in matches:
+            contextual = admin["alias_context"][alias].get(province_context, set())
+            codes.update(contextual or admin["aliases"][alias])
+        if city_context:
+            city_base = region_base(city_context)
+            city_codes = {
+                code
+                for code in codes
+                if region_base(admin["counties_by_code"][code]["city"]) == city_base
+                or admin["counties_by_code"][code]["city"] in city_context
+            }
+            if city_codes:
+                codes = city_codes
+        resolved = summarize_locations(codes, admin)
+        if resolved:
+            return resolved
+
+    province = primary_province(notice_location) if notice_location else clean(original_province)
+    if province in MUNICIPALITIES:
+        return {"province": province, "city": province, "district": "县级行政区待核实"}
+    city_candidate = clean(raw_city) or clean(notice_location)
+    candidate_base = region_base(city_candidate)
+    city_matches = {
+        city
+        for city in admin["prefectures"].get(province, set())
+        if city in city_candidate or region_base(city) == candidate_base
+    }
+    if len(city_matches) == 1:
+        city = next(iter(city_matches))
+        district = "不设县级行政区" if (province, city) in admin["direct_prefectures"] else "县级行政区待核实"
+        return {"province": province, "city": city, "district": district}
+    if province in admin["prefectures"]:
+        return {"province": province, "city": "地级行政区待核实", "district": "县级行政区待核实"}
+    return {"province": "省级行政区待核实", "city": "地级行政区待核实", "district": "县级行政区待核实"}
+
+
 def data_tables(soup: BeautifulSoup) -> list:
     return [table for table in soup.find_all("table") if len(table.find_all("tr")) > 20]
 
@@ -239,7 +660,7 @@ def parse_notice_units(batch: int, soup: BeautifulSoup) -> dict[int, dict[str, s
     return units
 
 
-def parse_merged_table(batch: int, table) -> list[dict[str, str | int | bool]]:
+def parse_merged_table(batch: int, table, admin: dict) -> list[dict[str, str | int | bool]]:
     units = []
     category = "未分类"
     for row in table.find_all("tr"):
@@ -258,6 +679,9 @@ def parse_merged_table(batch: int, table) -> list[dict[str, str | int | bool]]:
             code, name, era, location, remark = "", *cells[1:]
         location = clean(location)
         name, alias = normalize_name(name)
+        current = resolve_current_location(
+            f"merge-{batch}-{serial:03d}", batch, name, primary_province(location), location, "", location, admin
+        )
         units.append({
             "id": f"merge-{batch}-{serial:03d}",
             "code": clean(code),
@@ -268,7 +692,7 @@ def parse_merged_table(batch: int, table) -> list[dict[str, str | int | bool]]:
             "category": category,
             "era": clean(era),
             "period": classify_period(era, name),
-            "province": primary_province(location),
+            **current,
             "location": location,
             "kind": "merged",
             "remark": clean(remark),
@@ -290,7 +714,7 @@ def load_standardized_items(source_root: Path) -> list[dict]:
     ]
 
 
-def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict]]) -> list[dict]:
+def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict]], admin: dict) -> list[dict]:
     results = []
     years = {1: 1961, 2: 1982, 3: 1988, 4: 1996, 5: 2001, 6: 2006, 7: 2013, 8: 2019}
     for item in standardized:
@@ -301,6 +725,16 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
         location = notice["location"] if notice else fallback_location
         era = (notice["era"] if notice else "") or clean(item.get("era", ""))
         name, alias = normalize_name(notice["name"] if notice else item["name"])
+        current = resolve_current_location(
+            item["id"],
+            batch,
+            name,
+            clean(item.get("province", "")),
+            clean(item.get("city", "")),
+            clean(item.get("district", "")),
+            location,
+            admin,
+        )
         results.append({
             "id": item["id"],
             "code": item["id"],
@@ -311,19 +745,24 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
             "category": CATEGORY_LABELS.get(item.get("category", ""), "未分类"),
             "period": classify_period(era, name),
             "era": era,
-            "province": primary_province(location),
+            **current,
             "location": location,
             "kind": "unit",
-            "remark": "增补项目" if serial > EXPECTED_NOTICE[batch] else "",
+            "remark": BASE_REMARK_OVERRIDES.get(
+                item["id"], "增补项目" if serial > EXPECTED_NOTICE[batch] else ""
+            ),
             "source": SOURCE_URLS[batch],
         })
     return results
 
 
-def batch4_merged_items() -> list[dict]:
+def batch4_merged_items(admin: dict) -> list[dict]:
     results = []
     for serial, (raw_name, era, location, remark) in enumerate(BATCH4_MERGED, 1):
         name, alias = normalize_name(raw_name)
+        current = resolve_current_location(
+            f"merge-4-{serial:03d}", 4, name, primary_province(location), location, "", location, admin
+        )
         results.append({
             "id": f"merge-4-{serial:03d}",
             "code": "",
@@ -334,7 +773,7 @@ def batch4_merged_items() -> list[dict]:
             "category": "未分类",
             "era": era,
             "period": classify_period(era, name),
-            "province": primary_province(location),
+            **current,
             "location": location,
             "kind": "merged",
             "remark": remark,
@@ -347,7 +786,7 @@ def write_outputs(units: list[dict]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     fields = (
         "id", "code", "name", "alias", "batch", "year", "category", "period", "era", "province",
-        "location", "kind", "remark", "source", "visited", "visit_time", "notes",
+        "city", "district", "location", "kind", "remark", "source", "visited", "visit_time", "notes",
     )
     with (DATA_DIR / "heritage.csv").open("w", encoding="utf-8-sig", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -362,6 +801,7 @@ def write_outputs(units: list[dict]) -> None:
 
 def main() -> None:
     session = http_session()
+    admin = load_admin_divisions(session)
     soups = {batch: fetch_notice(session, title) for batch, title in PAGES.items()}
     notices = {batch: parse_notice_units(batch, soup) for batch, soup in soups.items()}
 
@@ -372,17 +812,17 @@ def main() -> None:
         )
         standardized = load_standardized_items(Path(temp_dir))
 
-    base = build_base_items(standardized, notices)
+    base = build_base_items(standardized, notices, admin)
     base_counts = Counter(item["batch"] for item in base)
     if dict(sorted(base_counts.items())) != EXPECTED_BASE:
         raise AssertionError(f"Base counts do not match: {dict(base_counts)}")
 
-    merged = batch4_merged_items()
+    merged = batch4_merged_items(admin)
     for batch in range(5, 9):
         merge_tables = data_tables(soups[batch])[1:]
         if len(merge_tables) != 1:
             raise AssertionError(f"Batch {batch}: expected one merged-project table")
-        merged.extend(parse_merged_table(batch, merge_tables[0]))
+        merged.extend(parse_merged_table(batch, merge_tables[0], admin))
     merged_counts = Counter(item["batch"] for item in merged)
     if dict(sorted(merged_counts.items())) != EXPECTED_MERGED:
         raise AssertionError(f"Merged counts do not match: {dict(merged_counts)}")

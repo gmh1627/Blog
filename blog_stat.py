@@ -280,14 +280,14 @@ def write_to_markdown(all_articles, total_word_count, filename="游记统计.md"
         
         # 写入文章列表（倒序）
         f.write(f"## 文章详情\n\n")
-        f.write(f"| 序号 | 文章标题 | 字数 | 发表时间 | 更新时间 | 链接 |\n")
-        f.write(f"|------|----------|------|----------|----------|------|\n")
+        f.write(f"| 序号 | 文章标题 | 字数 | 发表时间 | 更新时间 |\n")
+        f.write(f"|------|----------|------|----------|----------|\n")
         
         # 将文章列表倒序
         reversed_articles = list(reversed(all_articles))
         for i, article in enumerate(reversed_articles, 1):
             title = article['title'].replace('|', '\\|')  # 转义管道符
-            f.write(f"| {i} | {title} | {article['word_count_text']} | {article['published_time']} | {article['updated_time']} | [查看文章]({article['url']}) |\n")
+            f.write(f"| {i} | [{title}]({article['url']}) | {article['word_count_text']} | {article['published_time']} | {article['updated_time']} |\n")
         
         # 写入字数分布统计
         f.write(f"\n## 字数分布\n\n")
@@ -308,14 +308,14 @@ def write_to_markdown(all_articles, total_word_count, filename="游记统计.md"
 
         # 写入按字数排序的文章列表
         f.write(f"\n## 按字数排序\n\n")
-        f.write(f"| 序号 | 文章标题 | 字数 | 发表时间 | 更新时间 | 链接 |\n")
-        f.write(f"|------|----------|------|----------|----------|------|\n")
+        f.write(f"| 序号 | 文章标题 | 字数 | 发表时间 | 更新时间 |\n")
+        f.write(f"|------|----------|------|----------|----------|\n")
         
         # 按字数从少到多排序
         sorted_by_word_count = sorted(all_articles, key=lambda x: x['word_count'])
         for i, article in enumerate(sorted_by_word_count, 1):
             title = article['title'].replace('|', '\\|')  # 转义管道符
-            f.write(f"| {i} | {title} | {article['word_count_text']} | {article['published_time']} | {article['updated_time']} | [查看文章]({article['url']}) |\n")
+            f.write(f"| {i} | [{title}]({article['url']}) | {article['word_count_text']} | {article['published_time']} | {article['updated_time']} |\n")
             
 def scrape_category(base_url, label=""):
     """爬取某个分类下的所有文章，返回文章列表和总字数"""

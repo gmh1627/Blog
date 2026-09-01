@@ -974,14 +974,6 @@ input[role="switch"]:checked::after {
   font-family: var(--font-serif);
 }
 
-.group-heading small {
-  color: #c9d2cd;
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-  font-family: var(--font-sans);
-}
-
 .table-wrap {
   overflow-x: auto;
   background: var(--surface);
@@ -1240,7 +1232,8 @@ input[role="switch"]:checked::after {
   opacity: 0.45;
 }
 
-.detail-dialog {
+.detail-dialog,
+.recent-saves-dialog {
   width: min(620px, calc(100% - 32px));
   max-height: calc(100vh - 32px);
   padding: 0;
@@ -1249,12 +1242,83 @@ input[role="switch"]:checked::after {
   box-shadow: var(--shadow);
 }
 
-.detail-dialog::backdrop {
+.detail-dialog::backdrop,
+.recent-saves-dialog::backdrop {
   background: rgba(18, 25, 22, 0.55);
 }
 
-.detail-dialog form {
+.detail-dialog form,
+.recent-saves-dialog form {
   padding: 24px;
+}
+
+.recent-saves-dialog {
+  width: min(560px, calc(100% - 32px));
+}
+
+.recent-saves-list {
+  max-height: min(560px, calc(100vh - 130px));
+  margin-top: 18px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+
+.recent-save-item {
+  width: 100%;
+  min-height: 64px;
+  padding: 10px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+}
+
+.recent-save-item:hover {
+  color: var(--green);
+  background: var(--surface-muted);
+}
+
+.recent-save-main,
+.recent-save-meta {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.recent-save-main {
+  flex: 1 1 auto;
+}
+
+.recent-save-main strong {
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+
+.recent-save-main small,
+.recent-save-meta small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.recent-save-meta {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.recent-save-meta time {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-saves-empty {
+  padding: 48px 16px;
+  color: var(--muted);
+  text-align: center;
 }
 
 .dialog-header {
@@ -1595,8 +1659,19 @@ footer {
     flex-direction: column;
   }
 
-  .detail-dialog form {
+  .detail-dialog form,
+  .recent-saves-dialog form {
     padding: 18px;
+  }
+
+  .recent-save-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .recent-save-meta {
+    text-align: left;
   }
 
   footer {

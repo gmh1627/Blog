@@ -122,6 +122,39 @@ PERIOD_OVERRIDES = {
     "林则徐销烟池与虎门炮台旧址": "近代",
 }
 
+ERA_OVERRIDES = {
+    "7-0719-3-017": "明清",
+}
+
+ERA_PAIR_NORMALIZATIONS = {
+    "夏、商": "夏商",
+    "夏至商": "夏商",
+    "商、周": "商周",
+    "商至周": "商周",
+    "春秋、战国": "春秋战国",
+    "春秋至战国": "春秋战国",
+    "秦、汉": "秦汉",
+    "秦至汉": "秦汉",
+    "汉、魏": "汉魏",
+    "汉至魏": "汉魏",
+    "魏、晋": "魏晋",
+    "魏至晋": "魏晋",
+    "隋、唐": "隋唐",
+    "隋至唐": "隋唐",
+    "唐、宋": "唐宋",
+    "唐至宋": "唐宋",
+    "宋、元": "宋元",
+    "宋至元": "宋元",
+    "辽、金": "辽金",
+    "辽至金": "辽金",
+    "金、元": "金元",
+    "金至元": "金元",
+    "元、明": "元明",
+    "元至明": "元明",
+    "明、清": "明清",
+    "明至清": "明清",
+}
+
 BASE_REMARK_OVERRIDES = {
     "3-0064-3-012": "第六批与宣化城墙合并，名称：宣化古城；镇朔楼已于第四批归入清远楼",
 }
@@ -344,7 +377,8 @@ def clean(value: str) -> str:
 
 
 def normalize_era(value: str) -> str:
-    return re.sub(r"（公元[^）]+）", "", clean(value))
+    era = re.sub(r"（公元[^）]+）", "", clean(value))
+    return ERA_PAIR_NORMALIZATIONS.get(era, era)
 
 
 def normalize_name(value: str) -> tuple[str, str]:
@@ -953,7 +987,10 @@ def build_base_items(standardized: list[dict], notices: dict[int, dict[int, dict
         notice = notices[batch].get(serial)
         fallback_location = clean(f"{item.get('province', '')}{item.get('city', '')}")
         location = notice["location"] if notice else fallback_location
-        era = normalize_era((notice["era"] if notice else "") or item.get("era", ""))
+        era = ERA_OVERRIDES.get(
+            item["id"],
+            normalize_era((notice["era"] if notice else "") or item.get("era", "")),
+        )
         name, alias = normalize_name(notice["name"] if notice else item["name"])
         current = add_current_location(resolve_current_location(
             item["id"],

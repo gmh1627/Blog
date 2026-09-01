@@ -8,6 +8,7 @@ const recordsPath = resolve(appRoot, "data", "visits.private.json");
 const port = Number(process.env.HERITAGE_PORT || 4173);
 const host = "127.0.0.1";
 const maximumBodySize = 10 * 1024 * 1024;
+const historyLimit = 50;
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -39,25 +40,77 @@ function sanitizeRecords(value) {
   return records;
 }
 
-async function loadRecords() {
+function sanitizeHistory(value) {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((entry) => {
+    if (!entry || typeof entry !== "object" || !knownIds.has(entry.id)) return [];
+    if (!["added", "updated", "removed"].includes(entry.action)) return [];
+    const record = sanitizeRecords({ [entry.id]: entry.record })[entry.id];
+    if (!record) return [];
+    return [{
+      savedAt: String(entry.savedAt || ""),
+      id: entry.id,
+      action: entry.action,
+      record,
+    }];
+  }).slice(0, historyLimit);
+}
+
+async function loadPayload() {
   try {
     const payload = JSON.parse(await readFile(recordsPath, "utf8"));
-    return sanitizeRecords(payload.records || payload);
+    return {
+      updatedAt: String(payload.updatedAt || ""),
+      records: sanitizeRecords(payload.records || payload),
+      history: sanitizeHistory(payload.history),
+    };
   } catch (error) {
     if (error.code !== "ENOENT") console.warn(`无法读取记录文件：${error.message}`);
-    return {};
+    return { updatedAt: "", records: {}, history: [] };
   }
 }
 
-async function saveRecords(records) {
+function recordsEqual(left, right) {
+  return Boolean(left) === Boolean(right)
+    && (!left || (
+      left.visited === right.visited
+      && left.time === right.time
+      && left.notes === right.notes
+    ));
+}
+
+async function saveRecords(value) {
   await mkdir(dirname(recordsPath), { recursive: true });
+  const previous = await loadPayload();
+  const records = sanitizeRecords(value);
+  const savedAt = new Date().toISOString();
+  const changes = [];
+  const ids = new Set([...Object.keys(previous.records), ...Object.keys(records)]);
+  for (const id of ids) {
+    const before = previous.records[id];
+    const after = records[id];
+    if (recordsEqual(before, after)) continue;
+    changes.push({
+      savedAt,
+      id,
+      action: !before ? "added" : !after ? "removed" : "updated",
+      record: after || before,
+    });
+  }
+
+  if (!changes.length) {
+    return { count: Object.keys(records).length, history: previous.history, changed: 0 };
+  }
+
+  const history = [...changes, ...previous.history].slice(0, historyLimit);
   const payload = {
-    version: 1,
-    updatedAt: new Date().toISOString(),
-    records: sanitizeRecords(records),
+    version: 2,
+    updatedAt: savedAt,
+    records,
+    history,
   };
   await writeFile(recordsPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-  return Object.keys(payload.records).length;
+  return { count: Object.keys(records).length, history, changed: changes.length };
 }
 
 async function readBody(request) {
@@ -84,13 +137,14 @@ const server = createServer(async (request, response) => {
     const url = new URL(request.url, `http://${host}:${port}`);
     if (url.pathname === "/api/records") {
       if (request.method === "GET") {
-        sendJson(response, 200, { version: 1, records: await loadRecords() });
+        const payload = await loadPayload();
+        sendJson(response, 200, { version: 2, ...payload });
         return;
       }
       if (request.method === "POST") {
         const payload = JSON.parse(await readBody(request));
-        const count = await saveRecords(payload.records || payload);
-        sendJson(response, 200, { ok: true, count });
+        const result = await saveRecords(payload.records || payload);
+        sendJson(response, 200, { ok: true, ...result });
         return;
       }
       sendJson(response, 405, { error: "Method not allowed" });

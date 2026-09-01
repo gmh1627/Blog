@@ -6,6 +6,9 @@
     ? window.HERITAGE_DIVISIONS
     : {};
   const unitById = new Map(units.map((unit) => [unit.id, unit]));
+  const unitByRecordId = new Map(units.flatMap((unit) =>
+    (unit.record_ids || [unit.id]).map((recordId) => [recordId, unit])
+  ));
   const recordIdSet = new Set(units.flatMap((unit) => unit.record_ids || [unit.id]));
   const runtime = window.HERITAGE_RUNTIME && typeof window.HERITAGE_RUNTIME === "object"
     ? window.HERITAGE_RUNTIME
@@ -166,6 +169,9 @@
     dialogVisited: document.querySelector("#dialogVisited"),
     dialogTime: document.querySelector("#dialogTime"),
     dialogNotes: document.querySelector("#dialogNotes"),
+    recentSavesButton: document.querySelector("#recentSavesButton"),
+    recentSavesDialog: document.querySelector("#recentSavesDialog"),
+    recentSavesList: document.querySelector("#recentSavesList"),
     importButton: document.querySelector("#importButton"),
     importFile: document.querySelector("#importFile"),
     exportJsonButton: document.querySelector("#exportJsonButton"),
@@ -183,6 +189,7 @@
   };
 
   let records = loadRecords();
+  let recentSaves = [];
   let editorConnected = false;
   let editorSaveQueue = Promise.resolve();
   let toastTimer = null;
@@ -202,6 +209,22 @@
     return sanitized;
   }
 
+  function sanitizeHistory(value) {
+    if (!Array.isArray(value)) return [];
+    return value.flatMap((entry) => {
+      if (!entry || typeof entry !== "object" || !recordIdSet.has(entry.id)) return [];
+      if (!["added", "updated", "removed"].includes(entry.action)) return [];
+      const record = sanitizeRecords({ [entry.id]: entry.record })[entry.id];
+      if (!record) return [];
+      return [{
+        savedAt: String(entry.savedAt || ""),
+        id: entry.id,
+        action: entry.action,
+        record,
+      }];
+    }).slice(0, 50);
+  }
+
   function loadRecords() {
     if (readOnly) return sanitizeRecords(runtime.records);
     try {
@@ -216,7 +239,7 @@
     if (readOnly) return;
     localStorage.setItem(storageKey, JSON.stringify(records));
     if (!editorConnected) return;
-    const payload = JSON.stringify({ version: 1, records });
+    const payload = JSON.stringify({ version: 2, records });
     elements.saveStatus.textContent = "正在保存…";
     editorSaveQueue = editorSaveQueue
       .catch(() => {})
@@ -227,6 +250,8 @@
           body: payload,
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        recentSaves = sanitizeHistory(result.history);
         elements.saveStatus.textContent = "已自动保存到博客数据";
       })
       .catch(() => {
@@ -290,6 +315,30 @@
     elements.toast.classList.add("show");
     window.clearTimeout(toastTimer);
     toastTimer = window.setTimeout(() => elements.toast.classList.remove("show"), 2600);
+  }
+
+  function renderRecentSaves() {
+    if (!recentSaves.length) {
+      elements.recentSavesList.innerHTML = '<div class="recent-saves-empty">尚无单项保存记录</div>';
+      return;
+    }
+    const actionLabels = { added: "新增", updated: "修改", removed: "删除" };
+    elements.recentSavesList.innerHTML = recentSaves.map((entry) => {
+      const unit = unitByRecordId.get(entry.id);
+      const savedDate = new Date(entry.savedAt);
+      const savedText = Number.isNaN(savedDate.getTime())
+        ? entry.savedAt
+        : savedDate.toLocaleString("zh-CN", { hour12: false });
+      const visitText = entry.action === "removed"
+        ? "记录已删除"
+        : entry.record.time
+          ? `到访 ${entry.record.time}`
+          : entry.record.visited ? "已到访" : "未到访";
+      return `<button class="recent-save-item" type="button" data-id="${escapeHtml(unit?.id || entry.id)}">
+        <span class="recent-save-main"><strong>${escapeHtml(unit?.name || entry.id)}</strong><small>${actionLabels[entry.action]}</small></span>
+        <span class="recent-save-meta"><time datetime="${escapeHtml(entry.savedAt)}">${escapeHtml(savedText)}</time><small>${escapeHtml(visitText)}</small></span>
+      </button>`;
+    }).join("");
   }
 
   function browseCity(unit) {
@@ -741,9 +790,8 @@
   }
 
   function renderGroup(label, groupUnits) {
-    const visited = groupUnits.filter((unit) => recordFor(unit.id).visited).length;
     return `<section class="result-group">
-      <h2 class="group-heading"><span>${escapeHtml(label)}</span><small>${visited} / ${groupUnits.length} 已到访</small></h2>
+      <h2 class="group-heading"><span>${escapeHtml(label)}</span></h2>
       <div class="table-wrap">
         <table class="heritage-table">
           <thead><tr>
@@ -982,6 +1030,7 @@
       if (!response.ok) return;
       const payload = await response.json();
       records = sanitizeRecords(payload.records || payload);
+      recentSaves = sanitizeHistory(payload.history);
       localStorage.setItem(storageKey, JSON.stringify(records));
       editorConnected = true;
       elements.saveStatus.textContent = "";
@@ -1202,6 +1251,17 @@
       elements.dataMenu.open = false;
       elements.importFile.click();
     });
+    elements.recentSavesButton.addEventListener("click", () => {
+      elements.dataMenu.open = false;
+      renderRecentSaves();
+      if (typeof elements.recentSavesDialog.showModal === "function") elements.recentSavesDialog.showModal();
+    });
+    elements.recentSavesList.addEventListener("click", (event) => {
+      const item = event.target.closest(".recent-save-item[data-id]");
+      if (!item) return;
+      elements.recentSavesDialog.close();
+      openDetail(item.dataset.id);
+    });
     elements.importFile.addEventListener("change", () => {
       if (elements.importFile.files[0]) importJson(elements.importFile.files[0]);
     });
@@ -1228,7 +1288,7 @@
         };
         localStorage.setItem(storageKey, JSON.stringify(records));
       }
-      const payload = JSON.stringify({ version: 1, records });
+      const payload = JSON.stringify({ version: 2, records });
       navigator.sendBeacon("/api/records", new Blob([payload], { type: "application/json" }));
     });
 

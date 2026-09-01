@@ -26,6 +26,7 @@
       <details class="data-menu">
         <summary class="button secondary">数据</summary>
         <div class="data-menu-popover" aria-label="数据操作">
+          <button id="recentSavesButton" type="button">最近保存</button>
           <button id="importButton" type="button" title="从此前备份的 JSON 恢复到访记录">导入备份</button>
           <button id="exportJsonButton" type="button" title="将浏览器中的到访时间和备注保存为 JSON">备份记录</button>
           <button id="exportCsvButton" type="button" title="将当前筛选结果导出为可用 Excel 打开的表格">导出当前 CSV</button>
@@ -210,6 +211,16 @@
       <div class="dialog-actions">
         <button class="button primary" id="saveDetailButton" value="default" type="submit">保存记录</button>
       </div>
+    </form>
+  </dialog>
+
+  <dialog id="recentSavesDialog" class="recent-saves-dialog">
+    <form method="dialog">
+      <div class="dialog-header">
+        <h2>最近保存</h2>
+        <button class="close-button" value="cancel" aria-label="关闭" title="关闭" type="submit">×</button>
+      </div>
+      <div id="recentSavesList" class="recent-saves-list"></div>
     </form>
   </dialog>
 

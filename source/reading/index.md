@@ -8,7 +8,7 @@ title: Reading
    - [大二](../posts/3af1)
    - [大三](../posts/e325)
    - [大四](../posts/7f58)
-   - [博一](../posts/)
+   - [博一](../posts/dc48)
 
 - [阅读记录（本科及博士）](../posts/b7c9)
 - [藏书](../posts/fcfb)

@@ -322,8 +322,20 @@
       elements.recentSavesList.innerHTML = '<div class="recent-saves-empty">尚无单项保存记录</div>';
       return;
     }
+    // Autosave can produce several history entries for one place. Keep the
+    // newest entry per place in this compact view while preserving full
+    // history on the server for recovery and audit.
+    const visibleSaves = [];
+    const seenUnits = new Set();
+    for (const entry of recentSaves) {
+      const unit = unitByRecordId.get(entry.id);
+      const key = unit?.id || entry.id;
+      if (seenUnits.has(key)) continue;
+      seenUnits.add(key);
+      visibleSaves.push(entry);
+    }
     const actionLabels = { added: "新增", updated: "修改", removed: "删除" };
-    elements.recentSavesList.innerHTML = recentSaves.map((entry) => {
+    elements.recentSavesList.innerHTML = visibleSaves.map((entry) => {
       const unit = unitByRecordId.get(entry.id);
       const savedDate = new Date(entry.savedAt);
       const savedText = Number.isNaN(savedDate.getTime())

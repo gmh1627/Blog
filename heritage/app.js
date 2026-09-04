@@ -793,6 +793,7 @@
     const noteTitle = record.notes ? ` title="${escapeHtml(record.notes)}"` : "";
     const disabled = readOnly ? " disabled" : "";
     const readonly = readOnly ? " readonly" : "";
+    const timeRows = Math.max(1, record.time.split("、").length);
     return `<tr class="${visitedClass.trim()}" data-id="${escapeHtml(unit.id)}">
       <td class="col-check"><input class="visit-checkbox" type="checkbox" aria-label="标记到访：${escapeHtml(unit.name)}"${checked}${disabled}></td>
       <td class="col-name">
@@ -803,7 +804,7 @@
       <td class="col-location">
         <span class="location-current">${escapeHtml(formatLocation(unit))}</span>
       </td>
-      <td class="col-time"><textarea class="visit-time-input" rows="${record.time.includes("、") ? 2 : 1}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}>${escapeHtml(record.time)}</textarea></td>
+      <td class="col-time"><textarea class="visit-time-input" rows="${timeRows}" aria-label="到访时间：${escapeHtml(unit.name)}" placeholder="年 / 月 / 日"${readonly}>${escapeHtml(record.time)}</textarea></td>
       <td class="col-actions"><button class="note-button${noteClass}" type="button" data-action="detail"${noteTitle}>${escapeHtml(noteText)}</button></td>
     </tr>`;
   }

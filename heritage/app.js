@@ -15,6 +15,7 @@
     : {};
   const readOnly = runtime.readOnly === true;
   const storageKey = "nationalHeritageVisits.v1";
+  const recentSaveSessionWindowMs = 30 * 60 * 1000;
   const provinceOrder = [
     "北京市", "天津市", "河北省", "山西省", "内蒙古自治区", "辽宁省", "吉林省", "黑龙江省",
     "上海市", "江苏省", "浙江省", "安徽省", "福建省", "江西省", "山东省", "河南省", "湖北省",
@@ -322,16 +323,22 @@
       elements.recentSavesList.innerHTML = '<div class="recent-saves-empty">尚无单项保存记录</div>';
       return;
     }
-    // Autosave can produce several history entries for one place. Keep the
-    // newest entry per place in this compact view while preserving full
-    // history on the server for recovery and audit.
+    // Autosave can produce several history entries for one place. Collapse
+    // entries from the same editing session, but keep entries separated by a
+    // longer pause so later edits remain visible.
     const visibleSaves = [];
-    const seenUnits = new Set();
+    const lastTimestampByUnit = new Map();
     for (const entry of recentSaves) {
       const unit = unitByRecordId.get(entry.id);
       const key = unit?.id || entry.id;
-      if (seenUnits.has(key)) continue;
-      seenUnits.add(key);
+      const timestamp = Date.parse(entry.savedAt);
+      const lastTimestamp = lastTimestampByUnit.get(key);
+      if (Number.isFinite(timestamp) && Number.isFinite(lastTimestamp)
+        && Math.abs(lastTimestamp - timestamp) <= recentSaveSessionWindowMs) {
+        lastTimestampByUnit.set(key, timestamp);
+        continue;
+      }
+      if (Number.isFinite(timestamp)) lastTimestampByUnit.set(key, timestamp);
       visibleSaves.push(entry);
     }
     const actionLabels = { added: "新增", updated: "修改", removed: "删除" };

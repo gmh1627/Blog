@@ -1,0 +1,306 @@
+{
+  "generated_utc": "2026-09-14T02:47:28.955548+00:00",
+  "python": "3.10.13",
+  "sympy": "1.14.0",
+  "arguments": {
+    "limit": 1000000,
+    "large_count": 4000,
+    "prime_limit": 100000,
+    "parity_limit": 20000,
+    "seed": 20260914
+  },
+  "dense": {
+    "inclusive_limit": 1000000,
+    "checked_even_count": 499999,
+    "counterexample_candidate": null,
+    "least_summand_records": [
+      {
+        "n": 4,
+        "p": 2,
+        "q": 2
+      },
+      {
+        "n": 6,
+        "p": 3,
+        "q": 3
+      },
+      {
+        "n": 12,
+        "p": 5,
+        "q": 7
+      },
+      {
+        "n": 30,
+        "p": 7,
+        "q": 23
+      },
+      {
+        "n": 98,
+        "p": 19,
+        "q": 79
+      },
+      {
+        "n": 220,
+        "p": 23,
+        "q": 197
+      },
+      {
+        "n": 308,
+        "p": 31,
+        "q": 277
+      },
+      {
+        "n": 556,
+        "p": 47,
+        "q": 509
+      },
+      {
+        "n": 992,
+        "p": 73,
+        "q": 919
+      },
+      {
+        "n": 2642,
+        "p": 103,
+        "q": 2539
+      },
+      {
+        "n": 5372,
+        "p": 139,
+        "q": 5233
+      },
+      {
+        "n": 7426,
+        "p": 173,
+        "q": 7253
+      },
+      {
+        "n": 43532,
+        "p": 211,
+        "q": 43321
+      },
+      {
+        "n": 54244,
+        "p": 233,
+        "q": 54011
+      },
+      {
+        "n": 63274,
+        "p": 293,
+        "q": 62981
+      },
+      {
+        "n": 113672,
+        "p": 313,
+        "q": 113359
+      },
+      {
+        "n": 128168,
+        "p": 331,
+        "q": 127837
+      },
+      {
+        "n": 194428,
+        "p": 359,
+        "q": 194069
+      },
+      {
+        "n": 194470,
+        "p": 383,
+        "q": 194087
+      },
+      {
+        "n": 413572,
+        "p": 389,
+        "q": 413183
+      },
+      {
+        "n": 503222,
+        "p": 523,
+        "q": 502699
+      }
+    ],
+    "witness_stream_sha256": "3c9b75140532edb06c4e32d4ac05c00d65084c8705096509881b775f09b5a03a"
+  },
+  "parity": {
+    "inclusive_limit": 20000,
+    "identity_verified": true,
+    "empty_sifted_targets": [],
+    "positive_L_count": 5,
+    "first_positive_L_examples": [
+      {
+        "n": 68,
+        "z": 4,
+        "S": 5,
+        "L": 1,
+        "r": 2
+      },
+      {
+        "n": 98,
+        "z": 4,
+        "S": 7,
+        "L": 1,
+        "r": 3
+      },
+      {
+        "n": 326,
+        "z": 6,
+        "S": 16,
+        "L": 2,
+        "r": 7
+      },
+      {
+        "n": 332,
+        "z": 6,
+        "S": 13,
+        "L": 1,
+        "r": 6
+      },
+      {
+        "n": 632,
+        "z": 8,
+        "S": 21,
+        "L": 1,
+        "r": 10
+      }
+    ],
+    "last_positive_L": {
+      "n": 632,
+      "z": 8,
+      "S": 21,
+      "L": 1,
+      "r": 10
+    },
+    "minimum_observed_margin_2r_over_S": {
+      "n": 68,
+      "z": 4,
+      "S": 5,
+      "L": 1,
+      "r": 2
+    },
+    "example_68": {
+      "n": 68,
+      "z": 4,
+      "S": 5,
+      "L": 1,
+      "r": 2,
+      "candidates": [
+        {
+          "p": 3,
+          "complement": 65,
+          "omega": 2
+        },
+        {
+          "p": 7,
+          "complement": 61,
+          "omega": 1
+        },
+        {
+          "p": 13,
+          "complement": 55,
+          "omega": 2
+        },
+        {
+          "p": 19,
+          "complement": 49,
+          "omega": 2
+        },
+        {
+          "p": 31,
+          "complement": 37,
+          "omega": 1
+        }
+      ]
+    }
+  },
+  "large": {
+    "tested_target_count": 4000,
+    "witness_count": 4000,
+    "first_summand_cutoff": 100000,
+    "families": {
+      "above_published_bound": 1000,
+      "near_uint64_limit": 1000,
+      "primorial_41": 121,
+      "primorial_43": 136,
+      "primorial_11": 106,
+      "primorial_31": 132,
+      "primorial_29": 114,
+      "primorial_37": 118,
+      "primorial_17": 129,
+      "primorial_47": 23,
+      "primorial_23": 121,
+      "seeded_uniform": 1000
+    },
+    "unresolved_not_counterexamples": [],
+    "min_target": "4000000000000000002",
+    "max_target": "18446744073709551614",
+    "hardest_witnesses": [
+      {
+        "n": "4000000000000000016",
+        "p": "1213",
+        "q": "3999999999999998803",
+        "family": "above_published_bound"
+      },
+      {
+        "n": "9788882005661344472",
+        "p": "883",
+        "q": "9788882005661343589",
+        "family": "seeded_uniform"
+      },
+      {
+        "n": "4000000000000000202",
+        "p": "853",
+        "q": "3999999999999999349",
+        "family": "above_published_bound"
+      },
+      {
+        "n": "9872456674332556720",
+        "p": "827",
+        "q": "9872456674332555893",
+        "family": "seeded_uniform"
+      },
+      {
+        "n": "18446744073709550342",
+        "p": "823",
+        "q": "18446744073709549519",
+        "family": "near_uint64_limit"
+      },
+      {
+        "n": "18446744073709551308",
+        "p": "769",
+        "q": "18446744073709550539",
+        "family": "near_uint64_limit"
+      },
+      {
+        "n": "4000000000000000118",
+        "p": "769",
+        "q": "3999999999999999349",
+        "family": "above_published_bound"
+      },
+      {
+        "n": "16048404357770277484",
+        "p": "743",
+        "q": "16048404357770276741",
+        "family": "seeded_uniform"
+      },
+      {
+        "n": "9917389471594406078",
+        "p": "727",
+        "q": "9917389471594405351",
+        "family": "seeded_uniform"
+      },
+      {
+        "n": "18446744073709551428",
+        "p": "709",
+        "q": "18446744073709550719",
+        "family": "near_uint64_limit"
+      }
+    ]
+  },
+  "certificates": {
+    "verified_sums": 3,
+    "verified_prime_nodes": 47
+  },
+  "elapsed_seconds": 3.702,
+  "trust": "Machine computation; not Lean-verified. No universal conclusion."
+}

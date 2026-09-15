@@ -1,0 +1,13 @@
+import GoldbachResearch.SmallFactor
+#check GoldbachResearch.Prime
+#check GoldbachResearch.Prime.one_lt
+#check GoldbachResearch.Prime.eq_one_or_self_of_dvd
+#check GoldbachResearch.Prime.dvd_prime
+#check Nat.dvd_sub
+#check Nat.sub_sub
+#check Nat.sub_sub_cancel
+#check Nat.mul_self_le_mul_self
+#check Nat.le_of_not_gt
+#check GoldbachResearch.Prime.ne_one
+#check GoldbachResearch.Prime.two_le
+#check GoldbachResearch.Prime.eq_two_or_odd

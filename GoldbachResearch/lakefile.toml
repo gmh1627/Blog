@@ -1,0 +1,9 @@
+name = "GoldbachResearch"
+version = "0.1.0"
+defaultTargets = ["GoldbachResearch", "Audit"]
+
+[[lean_lib]]
+name = "GoldbachResearch"
+
+[[lean_lib]]
+name = "Audit"

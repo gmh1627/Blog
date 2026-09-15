@@ -1,0 +1,591 @@
+<script language="JavaScript" src="/js/func_string.js?v=8.7"></script>
+<script language="JavaScript" src="/js/phpjs.js?v=1"></script>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<head>
+<meta http-equiv='Content-Type' content='text/html; charset=Windows-1251'>
+<META NAME='keywords' CONTENT='
+	Общероссийский математический портал, 
+	математическая жизнь в России,
+	российские периодические издания в области математических наук,
+	электронный документооборот,
+	база данных Математические журналы,
+	ведущие журналы ОМН РАН,
+	Математический институт им. В. А. Стеклова РАН,
+	Отделение математических наук РАН,
+	All-Russian Mathematical Portal,
+	mathematical life in Russia,
+	Russian periodical editions in Mathematics,
+	Steklov Mathematical Institute RAS,
+	Branch of Mathematical Sciences, Russian Academy of Sciences
+	'>
+
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      extensions: ["tex2jax.js"],
+      jax: ["input/TeX", "output/CommonHTML", "output/HTML-CSS","output/SVG", "output/PreviewHTML"],
+      tex2jax: {
+          inlineMath: [ ['$','$'] ],
+          displayMath: [ ['$$','$$'] ],
+          processEscapes: true
+          },
+
+
+      "HTML-CSS": {
+      	imageFont: null,
+        webFont: "STIX-Web",
+        availableFonts: ["TeX"],    // Or: ["STIX"], to allow local // ["TeX"]
+        preferredFont: ["TeX"]    // Or: "STIX", to allow local     // ["TeX"]
+      },
+
+      //"SVG": {
+      //  font: "STIX-Web"
+      //},
+
+      TeX: { 
+      	equationNumbers: { autoNumber: "AMS" },
+      	extensions: ["AMSmath.js","AMSsymbols.js","noErrors.js","noUndefined.js"],
+
+      	Macros:	{
+      		le: ['\\leqslant'],
+      		ge: ['\\geqslant'],
+      		textup: ['\\text'],
+      		Box: ['\\unicode{x25A1}'],
+      		}
+      }
+
+    });
+
+    MathJax.Hub.Register.StartupHook('TeX Jax Ready', function () {
+       MathJax.InputJax.TeX.prefilterHooks.Add(function (data) {
+         data.math=data.math.replace(/\mathbb\{1\}/g,'unicode{x1D7D9}');
+         data.math=data.math.replace(/\mathbb\{2\}/g,'unicode{x1D7DA}');
+       });
+    });
+
+
+  </script>
+  
+  <script type="text/javascript" src="/libs/mathjax/2.7.7/latest.js?config=TeX-AMS_HTML"></script>
+  
+
+<link title="Текущие выпуски журналов" rel="alternate" type="application/rss+xml" href="/rss/rssRecentIssues.phtml?mode=current&option_lang=rus"><link title="Архивные выпуски журналов" rel="alternate" type="application/rss+xml" href="/rss/rssRecentIssues.phtml?mode=archive&option_lang=rus">
+
+	<title>Math-Net.Ru</title>
+	<link rel="canonical" href="https://www.mathnet.ru//" />
+	<link href='/css/mathnet.css?v=1.17' rel='stylesheet' type='text/css'>
+	<link href='/css/webcard.css' rel='stylesheet' type='text/css'>
+
+
+	<link rel="preconnect" href="https://fonts.gstatic.com">
+	<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@600&display=swap" rel="stylesheet">
+
+ 	</head>
+	<body class='mainInfo' >
+
+	<table border=0 width=100% cellspacing=0 cellpadding=0><tr><td><table
+        border=0 width=100% cellspacing=0 cellpadding=0>
+	<tr class=topPic>
+		
+	<td align=center>
+	<img src=/images/mnet.jpg />
+	</td>
+		</tr>
+	</table>
+
+
+
+		<table border=0 width=100% cellspacing=0 cellpadding=0>
+	<tr  >
+	
+	<td style='width:10%' valign=middle align=left class=fon13>
+		<nobr>
+		<a class=r1 href=/index.phtml?&option_lang=rus>RUS</a>&nbsp;
+	    	<a class=r1 href=/index.phtml?&option_lang=eng>ENG</a></nobr>
+	    	</nobr>
+			</td>
+	<td style='width:10%' align=left class=fon13>
+	<nobr>
+	<a title='Главная страница' href=/?option_lang=rus><img src=/images/home2.gif border=0></a>
+	<a title='Мобильная версия' href=http://m.mathnet.ru?option_lang=rus><img src=/images/mobile.gif border=0></a>
+	&nbsp;&nbsp;
+	<a title='Telegram' href='https://t.me/MathNetRu'><img src=/images/64px-Telegram_logo.svg.png height=20 vspace=2 border=0></a>
+	<!--<a title='Twitter' href='https://twitter.com/MathNetRu'><img src=/images/Twitter_Social_Icon_Circle_Color.png  height=20 vspace=2  border=0></a>-->
+	<a title='YouTube' href='https://www.youtube.com/channel/UC_fq8SDW37l86fdJxlprL1A'><img src=/images/youtube_social_circle_red.png vspace=2 height=20 border=0></a>
+	</nobr>
+
+	</td>
+
+	<td style='width:60%' class=fon13 align=center>
+	<nobr>
+		<a class=r1 href=/ej.phtml?option_lang=rus>ЖУРНАЛЫ</a>
+		&nbsp;	
+		<a class=r1 href=/php/person.phtml?option_lang=rus>ПЕРСОНАЛИИ</a>
+		&nbsp;
+		<a class=r1 href=/php/organisation.phtml?option_lang=rus>ОРГАНИЗАЦИИ</a>
+		&nbsp;
+		<a class=r1 href=/php/conference.phtml?option_lang=rus>КОНФЕРЕНЦИИ</a>
+		&nbsp;
+		<a class=r1 href=/php/seminars.phtml?option_lang=rus>СЕМИНАРЫ</a>
+		&nbsp;
+		<a class=r1 href=/php/presentation.phtml?option_lang=rus>ВИДЕОТЕКА</a>
+		&nbsp;
+		<a class=r1 href=/poffice/mirefmodule.phtml?wshow=mirefmodule&option_lang=rus>ПАКЕТ AMSBIB</a>
+
+	</nobr>
+	</td>
+
+	<td style='width:20%' class=fon13>&nbsp;</td>
+	
+	</tr>
+	</table>
+
+	<noscript>
+	<div style='margin: 10px; padding: 10px; text-align: center; border: 1px solid #A91818; background-color: lightyellow'>
+	<b>JavaScript is disabled in your browser. Please switch it on to enable full functionality of the website</b>
+	</div>
+	</noscript>
+
+
+
+		<script language=JavaScript>
+	function showLogo(jrnid,act){
+	}
+	</script>
+	<table cellSpacing=0 cellPadding=10 width=100% border=0>
+	<tr>
+	<td valign=top class=leftcol>
+	  <script language=JavaScript>
+	function NavMOver(eItem,i){
+	//eItem.DefaultBgColor = eItem.style.backgroundColor;
+	//eItem.style.backgroundColor = 'lightyellow';
+	}
+
+	function NavMOut(eItem,i){
+	//eItem.style.backgroundColor = eItem.DefaultBgColor;
+	}
+	</script>
+
+	<table width=100%>
+		<tr>
+			<td valign=top align=right><IMG src="/gifs/ar8.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry1" href="/index.phtml/?option_lang=rus">Главная страница</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/ar9.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/about.phtml?option_lang=rus">О проекте</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/ar9.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/software.phtml?wshow=software&option_lang=rus">Программное обеспечение</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/ar9.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/classifications.phtml?wshow=classifications&option_lang=rus">Классификаторы</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/ar9.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/ulinks.phtml?wshow=ulinks&option_lang=rus">Полезные ссылки</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/ar9.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/php/agreement.phtml?option_lang=rus&gotourl=%2Fphp%2Fagreement.phtml%3Foption_lang%3Drus&nextgotourl=%2F&backtourl=%2Fphp%2Fagreement.phtml%3Foption_lang%3Drus">Пользовательское<br>соглашение</a></nobr></td>
+			</tr>
+				<tr>
+			<td><br></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/search.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/php/search.phtml?wshow=search&option_lang=rus">Поиск публикаций</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/search.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/php/searchrefs.phtml?option_lang=rus">Поиск ссылок</a></nobr></td>
+			</tr>
+				<tr>
+			<td><br></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/rss.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="ry" href="/rss/rssRecentIssues.phtml?option_lang=rus">RSS</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/1pts.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="rys" href="/rss/rssRecentIssues.phtml?mode=current&option_lang=rus">Текущие выпуски</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/1pts.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="rys" href="/rss/rssRecentIssues.phtml?mode=archive&option_lang=rus">Архивные выпуски</a></nobr></td>
+			</tr>
+				<tr>
+			<td valign=top align=right><IMG src="/gifs/1pts.gif" border=0></td>
+			<td valign=top align=left><nobr><a class="rys" href="/help.phtml?wshow=rss&option_lang=rus">Что такое RSS</a></nobr></td>
+			</tr>
+				</table>
+	<br>
+	<hr color=#AC4E4A>
+	<br>
+	
+<script>
+  (function() {
+    var cx = '016263596811403645603:nkhdtbysq40';
+    var gcse = document.createElement('script');
+    gcse.type = 'text/javascript';
+    gcse.async = true;
+    gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:')
+    +
+        '//cse.google.com/cse.js?cx=' + cx;
+    var s = document.getElementsByTagName('script')[0];
+    s.parentNode.insertBefore(gcse, s);
+  })();
+</script>
+<gcse:searchbox-only resultsUrl="/googlesitesearch.phtml?option_lang=rus" newWindow="false" queryParameterName="q"></gcse:searchbox-only>
+    
+<br>
+<hr color=#AC4E4A size=1>
+<br>
+
+      <div style='width: 170px' class=fix align=center>
+      
+      <!--
+      <a title='MathNet.Ru Video on YouTube' href="https://www.youtube.com/channel/UC_fq8SDW37l86fdJxlprL1A" target=_new><img title='MathNet.Ru Video on YouTube' border=0 src=/gifs/youtube_big.png></a>
+      -->
+      
+      <a title="Youtube" target="_blank" href="https://www.youtube.com/@MathNetRussia"><img align="absmiddle" border="0" src="/social/YoutubeLogo.svg" height="40px" style='margin-left:5px'/></a>
+      <a title="Telegram" target="_blank" href="https://t.me/MathNetRu"><img align="absmiddle" border="0" src="/social/TelegramLogo.svg" height="40px" style='margin-left:5px'/></a>
+
+      </div>
+
+      <br>
+      <hr color=#AC4E4A>
+      	<table border=0 cellspacing=0 cellpadding=2>
+	<script language=JavaScript src=/js/md5.js></script>
+	<script language=JavaScript src=/js/func_string.js></script>
+	<script language=JavaScript>
+	function fsubmit_login(){
+		myform=document.forms['loginf'];
+		myform.login.value=trim(myform.login.value);
+		myform.password.value=trim(myform.password.value);
+		if(myform.login.value=='' && myform.password.value==''){
+			alert('Введите логин и пароль');
+			return false;
+		}
+
+		if(!CheckStringReg(myform.login.value,regLogin,'Логин')){return false;}
+		myform.phash.value=MD5(myform.password.value);
+		myform.password.value='';
+		return true;
+	}
+	
+	function fsubmit_login_do(){
+		if(fsubmit_login()){
+			document.forms['loginf'].submit();
+			return true;
+		}
+		else{
+			return false;
+		}
+	}
+	
+	</script>
+	<a name=login></a>
+	<form name='loginf' action=/personal/plogin_do.phtml?option_lang=rus method=POST onSubmit="return fsubmit_login()">
+	<input type=hidden name=phash value=''>
+
+	<tr>
+	<td align=left colspan=2 class=x-bl><b><nobr>Персональный вход:</nobr></b></td>
+	</tr>
+	<tr>
+	<td align=right class=x-bl>Логин:</td>
+	<td align=left><input type=input class=ID size=10 name=login></td>
+	</tr>
+	<tr>
+	<td align=right class=x-bl>Пароль:</td>
+	<td align=left><input type=password class=ID size=10 name=password></td>
+	</tr>
+
+	<tr>
+	<td align=right class=x-bl><input type=checkbox name=if_savelogin></td>
+	<td class=x-bl align=left><nobr>Запомнить пароль</nobr></td>
+	</tr>
+
+	<tr>
+	<td align=right class=x-bl><input type=image src=/images/ar5.gif border=0></td>
+	<td align=left><a class=ri href=# onClick="return fsubmit_login_do()">Войти</a></td>
+	</tr>
+
+	<tr>
+	<td align=right class=x-bl><img src=/images/ar5.gif border=0></td>
+	<td align=left><a class=ri href=/php/getpassword.phtml?option_lang=rus>Забыли пароль?</a></td>
+	</tr>
+
+	<tr>
+	<td align=right class=x-bl><img src=/images/ar5.gif border=0></td>
+	<td align=left><a class=ri href=/php/registration.phtml?option_lang=rus>Регистрация</a></td>
+	</tr>
+	<input type=hidden name=qs value="/">
+	<input type=hidden name=qsrw value="">
+	</form>
+	</table>
+	
+	<br>
+
+		
+	<div align=center>
+
+	<a href="http://www.mathjax.org/">
+	<img hspace=35 title="Powered by MathJax" src="/gifs/mathjax.png" border="0" alt="Powered by MathJax"/ width=80 >
+	</a>
+	
+
+	<a href=http://www.crossref.org>
+	<img title='Crossref' width=100 hspace=35 src="/gifs/crossrefenabled.gif" border=0>
+	</a>
+
+	</div>
+		
+	</td>
+	<td  valign=top>
+	<TABLE cellSpacing=0 cellPadding=2 border=0>
+	<tr>
+	<td>
+	<h2 align=center>	Общероссийский портал Math-Net.Ru</h2>
+	<p align=justify>	Общероссийский портал Math-Net.Ru &mdash; это современная информационная система,
+				предоставляющая российским и зарубежным ученым различные возможности
+				в&nbsp;поиске научной информации по математике, физике, 
+				информационным технологиям и смежным наукам.
+				<!--
+				<br><br>
+				В 2020 году работы по наполнению баз данных портала выполняются в 
+				рамках Государственного контракта <nobr>№ 13.597.11.0043</nobr> по 
+				теме &laquo;Создание электронного архива выпусков научных журналов 
+				по тематическому направлению &laquo;Математика, физика, информационные 
+				технологии&raquo;.
+				-->
+				<br><br>
+ 				Проект представлен в социальных сетях:
+				<ul style='padding-top: 2px; margin-top: 0px; list-style-type:none'>
+ 				<li>
+ 				<a title='Telegram' href='https://t.me/MathNetRu'><img align=absmiddle src=/images/64px-Telegram_logo.svg.png height=20 vspace=2 border=0></a>
+ 				<a class=SLink title='Telegram' href='https://t.me/MathNetRu'>Telegram @MathNetRu</a>
+ 				</li>
+ 				<!--
+ 				<li>
+ 				<a title='Twitter' href='https://twitter.com/MathNetRu'><img align=absmiddle src=/images/Twitter_Social_Icon_Circle_Color.png  height=20 vspace=2  border=0></a>
+ 				<a class=SLink title='Twitter' href='https://twitter.com/MathNetRu'>Twitter @MathNetRu</a>
+ 				</li>
+ 				-->
+ 				<li>
+ 				<a title='YouTube' href='https://www.youtube.com/channel/UC_fq8SDW37l86fdJxlprL1A'><img align=absmiddle src=/images/youtube_social_circle_red.png vspace=2 height=20 border=0></a>
+ 				<a class=SLink title='YouTube' href='https://www.youtube.com/channel/UC_fq8SDW37l86fdJxlprL1A'>YouTube Math-Net.Ru</a>
+				</li>
+				</ul>
+ 				</p>
+	</td>
+	</tr>
+	
+	<tr>
+	<td>				<hr width=50% size=1 color=black align=left></td>
+	</tr>
+	
+	<TR>
+	<TD><b>	Журналы</b></TD>
+	</TR>
+		<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A  class=SLink title="Доклады Академии наук" href="/rus/dan">Доклады Академии наук</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['danmaSmallLogo'].src='/JrnLogos/danma/danma_on_mouse.jpg'" onMouseOut="document.images['danmaSmallLogo'].src='/JrnLogos/danma/danma_small.jpg'" class=SLink title="Доклады Российской академии наук. Математика, информатика, процессы управления" href="/rus/danma">Доклады Российской академии наук. Математика, информатика, процессы управления</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Математический институт им.&nbsp;В.А.&nbsp;Стеклова Российской академии наук</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['dmSmallLogo'].src='/JrnLogos/dm/dm.jpg'" onMouseOut="document.images['dmSmallLogo'].src='/JrnLogos/dm/dm1.jpg'" class=SLink title="Дискретная математика" href="/rus/dm">Дискретная математика</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['imSmallLogo'].src='/JrnLogos/im/im2017sa.jpg'" onMouseOut="document.images['imSmallLogo'].src='/JrnLogos/im/im2017s.jpg'" class=SLink title="Известия Российской академии наук. Серия математическая" href="/rus/im">Известия Российской академии наук. Серия математическая</A>
+			/
+			<A onMouseOver="document.images['imSmallLogo'].src='/JrnLogos/im/im2017sa.jpg'" onMouseOut="document.images['imSmallLogo'].src='/JrnLogos/im/im2017s.jpg'" class=SLink title="Izvestiya: Mathematics" href="/rus/im">Izvestiya: Mathematics</A>
+				</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['kvantSmallLogo'].src='/JrnLogos/kvant/kvant_small.jpg'" onMouseOut="document.images['kvantSmallLogo'].src='/JrnLogos/kvant/kvant_on_mouse.jpg'" class=SLink title="Квант" href="/rus/kvant">Квант</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['mzmSmallLogo'].src='/JrnLogos/mzm/mz_new2.jpg'" onMouseOut="document.images['mzmSmallLogo'].src='/JrnLogos/mzm/mz_new3.jpg'" class=SLink title="Математические заметки" href="/rus/mzm">Математические заметки</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['smSmallLogo'].src='/JrnLogos/sm/msb_small1.gif'" onMouseOut="document.images['smSmallLogo'].src='/JrnLogos/sm/msb_small.gif'" class=SLink title="Математический сборник" href="/rus/sm">Математический сборник</A>
+			/
+			<A onMouseOver="document.images['smSmallLogo'].src='/JrnLogos/sm/msb_small1.gif'" onMouseOut="document.images['smSmallLogo'].src='/JrnLogos/sm/msb_small.gif'" class=SLink title="Sbornik: Mathematics" href="/rus/sm">Sbornik: Mathematics</A>
+				</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['tmfSmallLogo'].src='/JrnLogos/tmf/tmf_small1.gif'" onMouseOut="document.images['tmfSmallLogo'].src='/JrnLogos/tmf/tmf_small.gif'" class=SLink title="Теоретическая и математическая физика" href="/rus/tmf">Теоретическая и математическая физика</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['tvpSmallLogo'].src='/JrnLogos/tvp/tvp2.jpg'" onMouseOut="document.images['tvpSmallLogo'].src='/JrnLogos/tvp/tvp3.jpg'" class=SLink title="Теория вероятностей и ее применения" href="/rus/tvp">Теория вероятностей и ее применения</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['tmSmallLogo'].src='/JrnLogos/tm/tm_small.gif'" onMouseOut="document.images['tmSmallLogo'].src='/JrnLogos/tm/tm_small1.gif'" class=SLink title="Труды Математического института имени В.&nbsp;А.&nbsp;Стеклова" href="/rus/tm">Труды Математического института имени В.&nbsp;А.&nbsp;Стеклова</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['rmSmallLogo'].src='/JrnLogos/rm/umn_small1.gif'" onMouseOut="document.images['rmSmallLogo'].src='/JrnLogos/rm/umn_small.gif'" class=SLink title="Успехи математических наук" href="/rus/rm">Успехи математических наук</A>
+			/
+			<A onMouseOver="document.images['rmSmallLogo'].src='/JrnLogos/rm/umn_small1.gif'" onMouseOut="document.images['rmSmallLogo'].src='/JrnLogos/rm/umn_small.gif'" class=SLink title="Russian Mathematical Surveys" href="/rus/rm">Russian Mathematical Surveys</A>
+				</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['faaSmallLogo'].src='/JrnLogos/faa/faa_small1.gif'" onMouseOut="document.images['faaSmallLogo'].src='/JrnLogos/faa/faa_small.gif'" class=SLink title="Функциональный анализ и его приложения" href="/rus/faa">Функциональный анализ и его приложения</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Отделение математических наук</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['zvmmfSmallLogo'].src='/JrnLogos/zvmmf/zvmmf2.jpg'" onMouseOut="document.images['zvmmfSmallLogo'].src='/JrnLogos/zvmmf/zvmmf3.jpg'" class=SLink title="Журнал вычислительной математики и математической физики" href="/rus/zvmmf">Журнал вычислительной математики и математической физики</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['mmSmallLogo'].src='/JrnLogos/mm/mm_small.gif'" onMouseOut="document.images['mmSmallLogo'].src='/JrnLogos/mm/mm_small1.gif'" class=SLink title="Математическое моделирование" href="/rus/mm">Математическое моделирование</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Отделение физических наук</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['jetplSmallLogo'].src='/JrnLogos/jetpl/jetpl2.jpg'" onMouseOut="document.images['jetplSmallLogo'].src='/JrnLogos/jetpl/jetpl3.jpg'" class=SLink title="Письма в Журнал экспериментальной и теоретической физики" href="/rus/jetpl">Письма в Журнал экспериментальной и теоретической физики</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['ufnSmallLogo'].src='/JrnLogos/ufn/ufn2.jpg'" onMouseOut="document.images['ufnSmallLogo'].src='/JrnLogos/ufn/ufn3.jpg'" class=SLink title="Успехи физических наук" href="/rus/ufn">Успехи физических наук</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Отделение нанотехнологий и информационных технологий</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A  class=SLink title="Дифференциальные уравнения" href="/rus/de">Дифференциальные уравнения</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['iaSmallLogo'].src='/JrnLogos/ia/ia2.jpg'" onMouseOut="document.images['iaSmallLogo'].src='/JrnLogos/ia/ia3.jpg'" class=SLink title="Информатика и её применения" href="/rus/ia">Информатика и её применения</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['ppiSmallLogo'].src='/JrnLogos/ppi/ppi2.jpg'" onMouseOut="document.images['ppiSmallLogo'].src='/JrnLogos/ppi/ppi3.jpg'" class=SLink title="Проблемы передачи информации" href="/rus/ppi">Проблемы передачи информации</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['ssiSmallLogo'].src='/JrnLogos/ssi/ssi2.jpg'" onMouseOut="document.images['ssiSmallLogo'].src='/JrnLogos/ssi/ssi3.jpg'" class=SLink title="Системы и средства информатики" href="/rus/ssi">Системы и средства информатики</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Отделение энергетики, машиностроения, механики и процессов управления</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A  class=SLink title="Автоматика и телемеханика" href="/rus/at">Автоматика и телемеханика</A>
+			</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['tvtSmallLogo'].src='/JrnLogos/tvt/tvt_s.gif'" onMouseOut="document.images['tvtSmallLogo'].src='/JrnLogos/tvt/tvt.gif'" class=SLink title="Теплофизика высоких температур" href="/rus/tvt">Теплофизика высоких температур</A>
+			</TD>
+		</TR>
+			<tr>
+			<td><br></td>
+			</tr>
+			
+			<tr>
+			<td><b><i>Российская академия наук, Отделение химии и наук о материалах</i></b></td>
+			</tr>
+				<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A onMouseOver="document.images['rcrSmallLogo'].src='/JrnLogos/rcr/ukh2.jpg'" onMouseOut="document.images['rcrSmallLogo'].src='/JrnLogos/rcr/ukh3.jpg'" class=SLink title="Успехи химии" href="/rus/rcr">Успехи химии</A>
+			/
+			<A onMouseOver="document.images['rcrSmallLogo'].src='/JrnLogos/rcr/ukh2.jpg'" onMouseOut="document.images['rcrSmallLogo'].src='/JrnLogos/rcr/ukh3.jpg'" class=SLink title="Russian Chemical Reviews" href="/rus/rcr">Russian Chemical Reviews</A>
+				</TD>
+		</TR>
+			<TR>
+		<TD class=sem>
+		<IMG src=/gifs/ar4.gif border=0>&nbsp;
+		<A  class=SLink title="Mendeleev Communications" href="/rus/mendc">M

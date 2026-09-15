@@ -1,0 +1,825 @@
+{
+  "method": "complete-factorization Lucas criterion",
+  "goldbach_witnesses": [
+    {
+      "n": "4000000000000000016",
+      "p": "1213",
+      "q": "3999999999999998803",
+      "family": "above_published_bound"
+    },
+    {
+      "n": "18446744073709551614",
+      "p": "277",
+      "q": "18446744073709551337",
+      "family": "near_uint64_limit"
+    },
+    {
+      "n": "11682905869181336790",
+      "p": "53",
+      "q": "11682905869181336737",
+      "family": "primorial_47"
+    }
+  ],
+  "nodes": {
+    "3": {
+      "n": "3",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        }
+      ]
+    },
+    "5": {
+      "n": "5",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        }
+      ]
+    },
+    "101": {
+      "n": "101",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "5",
+          "exponent": 2
+        }
+      ]
+    },
+    "1213": {
+      "n": "1213",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "101",
+          "exponent": 1
+        }
+      ]
+    },
+    "19": {
+      "n": "19",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 2
+        }
+      ]
+    },
+    "229": {
+      "n": "229",
+      "base": "6",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "19",
+          "exponent": 1
+        }
+      ]
+    },
+    "7": {
+      "n": "7",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        }
+      ]
+    },
+    "43": {
+      "n": "43",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "7",
+          "exponent": 1
+        }
+      ]
+    },
+    "8429": {
+      "n": "8429",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "7",
+          "exponent": 2
+        },
+        {
+          "prime": "43",
+          "exponent": 1
+        }
+      ]
+    },
+    "127": {
+      "n": "127",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 2
+        },
+        {
+          "prime": "7",
+          "exponent": 1
+        }
+      ]
+    },
+    "509": {
+      "n": "509",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "127",
+          "exponent": 1
+        }
+      ]
+    },
+    "4073": {
+      "n": "4073",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "509",
+          "exponent": 1
+        }
+      ]
+    },
+    "8147": {
+      "n": "8147",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "4073",
+          "exponent": 1
+        }
+      ]
+    },
+    "13": {
+      "n": "13",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        }
+      ]
+    },
+    "11": {
+      "n": "11",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        }
+      ]
+    },
+    "89": {
+      "n": "89",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "11",
+          "exponent": 1
+        }
+      ]
+    },
+    "40763": {
+      "n": "40763",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "89",
+          "exponent": 1
+        },
+        {
+          "prime": "229",
+          "exponent": 1
+        }
+      ]
+    },
+    "42393521": {
+      "n": "42393521",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 4
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "13",
+          "exponent": 1
+        },
+        {
+          "prime": "40763",
+          "exponent": 1
+        }
+      ]
+    },
+    "3999999999999998803": {
+      "n": "3999999999999998803",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "229",
+          "exponent": 1
+        },
+        {
+          "prime": "8147",
+          "exponent": 1
+        },
+        {
+          "prime": "8429",
+          "exponent": 1
+        },
+        {
+          "prime": "42393521",
+          "exponent": 1
+        }
+      ]
+    },
+    "23": {
+      "n": "23",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "11",
+          "exponent": 1
+        }
+      ]
+    },
+    "277": {
+      "n": "277",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "23",
+          "exponent": 1
+        }
+      ]
+    },
+    "53": {
+      "n": "53",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "13",
+          "exponent": 1
+        }
+      ]
+    },
+    "211": {
+      "n": "211",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "7",
+          "exponent": 1
+        }
+      ]
+    },
+    "431": {
+      "n": "431",
+      "base": "7",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "43",
+          "exponent": 1
+        }
+      ]
+    },
+    "863": {
+      "n": "863",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "431",
+          "exponent": 1
+        }
+      ]
+    },
+    "251": {
+      "n": "251",
+      "base": "6",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 3
+        }
+      ]
+    },
+    "41": {
+      "n": "41",
+      "base": "6",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        }
+      ]
+    },
+    "83": {
+      "n": "83",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "41",
+          "exponent": 1
+        }
+      ]
+    },
+    "181": {
+      "n": "181",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 2
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        }
+      ]
+    },
+    "30047": {
+      "n": "30047",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "83",
+          "exponent": 1
+        },
+        {
+          "prime": "181",
+          "exponent": 1
+        }
+      ]
+    },
+    "721129": {
+      "n": "721129",
+      "base": "7",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "30047",
+          "exponent": 1
+        }
+      ]
+    },
+    "362006759": {
+      "n": "362006759",
+      "base": "7",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "251",
+          "exponent": 1
+        },
+        {
+          "prime": "721129",
+          "exponent": 1
+        }
+      ]
+    },
+    "7240135181": {
+      "n": "7240135181",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "362006759",
+          "exponent": 1
+        }
+      ]
+    },
+    "18446744073709551337": {
+      "n": "18446744073709551337",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "11",
+          "exponent": 1
+        },
+        {
+          "prime": "53",
+          "exponent": 1
+        },
+        {
+          "prime": "211",
+          "exponent": 1
+        },
+        {
+          "prime": "863",
+          "exponent": 1
+        },
+        {
+          "prime": "7240135181",
+          "exponent": 1
+        }
+      ]
+    },
+    "61": {
+      "n": "61",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        }
+      ]
+    },
+    "733": {
+      "n": "733",
+      "base": "6",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "61",
+          "exponent": 1
+        }
+      ]
+    },
+    "158329": {
+      "n": "158329",
+      "base": "13",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 3
+        },
+        {
+          "prime": "3",
+          "exponent": 3
+        },
+        {
+          "prime": "733",
+          "exponent": 1
+        }
+      ]
+    },
+    "633317": {
+      "n": "633317",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "158329",
+          "exponent": 1
+        }
+      ]
+    },
+    "8866439": {
+      "n": "8866439",
+      "base": "21",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "7",
+          "exponent": 1
+        },
+        {
+          "prime": "633317",
+          "exponent": 1
+        }
+      ]
+    },
+    "1595959021": {
+      "n": "1595959021",
+      "base": "2",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 2
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "8866439",
+          "exponent": 1
+        }
+      ]
+    },
+    "79": {
+      "n": "79",
+      "base": "3",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "13",
+          "exponent": 1
+        }
+      ]
+    },
+    "191": {
+      "n": "191",
+      "base": "19",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "19",
+          "exponent": 1
+        }
+      ]
+    },
+    "383": {
+      "n": "383",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "191",
+          "exponent": 1
+        }
+      ]
+    },
+    "13789": {
+      "n": "13789",
+      "base": "7",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 2
+        },
+        {
+          "prime": "3",
+          "exponent": 2
+        },
+        {
+          "prime": "383",
+          "exponent": 1
+        }
+      ]
+    },
+    "76253171": {
+      "n": "76253171",
+      "base": "6",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 1
+        },
+        {
+          "prime": "5",
+          "exponent": 1
+        },
+        {
+          "prime": "7",
+          "exponent": 1
+        },
+        {
+          "prime": "79",
+          "exponent": 1
+        },
+        {
+          "prime": "13789",
+          "exponent": 1
+        }
+      ]
+    },
+    "11682905869181336737": {
+      "n": "11682905869181336737",
+      "base": "5",
+      "factors": [
+        {
+          "prime": "2",
+          "exponent": 5
+        },
+        {
+          "prime": "3",
+          "exponent": 1
+        },
+        {
+          "prime": "76253171",
+          "exponent": 1
+        },
+        {
+          "prime": "1595959021",
+          "exponent": 1
+        }
+      ]
+    }
+  },
+  "verification": {
+    "verified_sums": 3,
+    "verified_prime_nodes": 47
+  }
+}

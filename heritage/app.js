@@ -1282,9 +1282,11 @@
       const link = event.target.closest("a[href]");
       if (!link || !link.closest("#statisticsView")) return;
       if (!link.matches(".timeline-point, .chart-row-link, .distribution-legend-item, .callout-segment")) return;
-      const url = new URL(link.href, window.location.href);
-      if (!url.searchParams.has("status")) return;
       event.preventDefault();
+      const href = link.getAttribute("href");
+      if (!href) return;
+      const url = new URL(href, window.location.href);
+      if (!url.searchParams.has("status")) return;
       openStatsItems(url.searchParams);
     });
     elements.statsItemsList.addEventListener("click", (event) => {

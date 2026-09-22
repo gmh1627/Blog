@@ -1237,7 +1237,8 @@ input[role="switch"]:checked::after {
 }
 
 .detail-dialog,
-.recent-saves-dialog {
+.recent-saves-dialog,
+.stats-items-dialog {
   width: min(620px, calc(100% - 32px));
   max-height: calc(100vh - 32px);
   padding: 0;
@@ -1247,12 +1248,14 @@ input[role="switch"]:checked::after {
 }
 
 .detail-dialog::backdrop,
-.recent-saves-dialog::backdrop {
+.recent-saves-dialog::backdrop,
+.stats-items-dialog::backdrop {
   background: rgba(18, 25, 22, 0.55);
 }
 
 .detail-dialog form,
-.recent-saves-dialog form {
+.recent-saves-dialog form,
+.stats-items-dialog form {
   padding: 24px;
 }
 
@@ -1320,6 +1323,74 @@ input[role="switch"]:checked::after {
 }
 
 .recent-saves-empty {
+  padding: 48px 16px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.stats-items-dialog {
+  width: min(680px, calc(100% - 32px));
+}
+
+.stats-items-list {
+  max-height: min(600px, calc(100vh - 130px));
+  margin-top: 18px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+
+.stats-item {
+  width: 100%;
+  min-height: 68px;
+  padding: 11px 2px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+}
+
+.stats-item:hover {
+  color: var(--green);
+  background: var(--surface-muted);
+}
+
+.stats-item-main,
+.stats-item-meta {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.stats-item-main {
+  flex: 1 1 auto;
+}
+
+.stats-item-main strong {
+  font-family: var(--font-serif);
+  font-size: 15px;
+}
+
+.stats-item-main small,
+.stats-item-meta small,
+.stats-item-meta time {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.stats-item-meta {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.stats-item-meta time {
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-items-empty {
   padding: 48px 16px;
   color: var(--muted);
   text-align: center;
@@ -1664,7 +1735,8 @@ footer {
   }
 
   .detail-dialog form,
-  .recent-saves-dialog form {
+  .recent-saves-dialog form,
+  .stats-items-dialog form {
     padding: 18px;
   }
 
@@ -1675,6 +1747,16 @@ footer {
   }
 
   .recent-save-meta {
+    text-align: left;
+  }
+
+  .stats-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .stats-item-meta {
     text-align: left;
   }
 

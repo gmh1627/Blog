@@ -173,6 +173,9 @@
     recentSavesButton: document.querySelector("#recentSavesButton"),
     recentSavesDialog: document.querySelector("#recentSavesDialog"),
     recentSavesList: document.querySelector("#recentSavesList"),
+    statsItemsDialog: document.querySelector("#statsItemsDialog"),
+    statsItemsTitle: document.querySelector("#statsItemsTitle"),
+    statsItemsList: document.querySelector("#statsItemsList"),
     importButton: document.querySelector("#importButton"),
     importFile: document.querySelector("#importFile"),
     exportJsonButton: document.querySelector("#exportJsonButton"),
@@ -562,6 +565,58 @@
       if (value !== undefined && value !== null && value !== "") params.set(key, String(value));
     });
     return `./index.html?${params.toString()}`;
+  }
+
+  function statsItemsForParams(params) {
+    const batch = Number(params.get("batch"));
+    const visitYear = Number(params.get("visitYear"));
+    const visitMonth = Number(params.get("visitMonth"));
+    return units.filter((unit) => {
+      if (unit.kind !== "unit" || !recordFor(unit.id).visited) return false;
+      if (Number.isInteger(batch) && batch >= 1 && unit.batch !== batch) return false;
+      if (params.get("province") && unit.province !== params.get("province")) return false;
+      if (params.get("category") && unit.category !== params.get("category")) return false;
+      if (params.get("period") && unit.period !== params.get("period")) return false;
+      if (Number.isInteger(visitYear)) {
+        const parsed = parseVisitTime(recordFor(unit.id).time);
+        if (!parsed || parsed.year !== visitYear || (Number.isInteger(visitMonth) && parsed.month !== visitMonth)) return false;
+      }
+      return true;
+    }).sort((a, b) => {
+      if (a.batch !== b.batch) return a.batch - b.batch;
+      const orderDifference = announcementOrder(a) - announcementOrder(b);
+      return orderDifference || collator.compare(a.name, b.name);
+    });
+  }
+
+  function statsItemsTitle(params, count) {
+    const year = params.get("visitYear");
+    const month = params.get("visitMonth");
+    const timeLabel = year ? `${year}年${month ? `${month}月` : ""}` : "";
+    const label = params.get("batch")
+      ? `第${params.get("batch")}批`
+      : params.get("category") || params.get("period") || params.get("province") || timeLabel || "筛选结果";
+    return `${label} · ${count} 项`;
+  }
+
+  function openStatsItems(params) {
+    const items = statsItemsForParams(params);
+    elements.statsItemsTitle.textContent = statsItemsTitle(params, items.length);
+    elements.statsItemsList.innerHTML = items.length
+      ? items.map((unit) => {
+        const record = recordFor(unit.id);
+        return `<button class="stats-item" type="button" data-id="${escapeHtml(unit.id)}">
+          <span class="stats-item-main"><strong>${escapeHtml(unit.name)}</strong><small>${escapeHtml(unit.current_location || "")}</small></span>
+          <span class="stats-item-meta"><small>第${unit.batch}批 · ${escapeHtml(unit.period)}</small><time>${escapeHtml(record.time || "未填时间")}</time></span>
+        </button>`;
+      }).join("")
+      : '<div class="stats-items-empty">没有符合条件的已到访项目</div>';
+    if (typeof elements.statsItemsDialog.showModal === "function") elements.statsItemsDialog.showModal();
+  }
+
+  function openStatsItemsFromHref(href) {
+    const url = new URL(href, window.location.href);
+    openStatsItems(url.searchParams);
   }
 
   function renderTimeline(visitedUnits) {
@@ -1169,7 +1224,11 @@
           end += item.percent;
           return position <= end;
         });
-        if (segment) window.location.href = segment.href;
+        if (segment) {
+          event.preventDefault();
+          event.stopPropagation();
+          openStatsItemsFromHref(segment.href);
+        }
       });
     });
 
@@ -1179,7 +1238,7 @@
       const button = event.target.closest("button[data-province]");
       if (!button) return;
       if (isStatisticsView) {
-        window.location.href = `./index.html?province=${encodeURIComponent(button.dataset.province)}`;
+        openStatsItems(new URLSearchParams({ status: "visited", province: button.dataset.province }));
         return;
       }
       state.province = state.province === button.dataset.province ? "all" : button.dataset.province;
@@ -1214,6 +1273,22 @@
         updateRecord(row.dataset.id, { time: event.target.value, visited: Boolean(event.target.value.trim()) || recordFor(row.dataset.id).visited });
         renderAll();
       }
+    });
+
+    elements.statisticsView.addEventListener("click", (event) => {
+      const link = event.target.closest("a[href]");
+      if (!link || !link.closest("#statisticsView")) return;
+      if (!link.matches(".timeline-point, .chart-row-link, .distribution-legend-item, .callout-segment")) return;
+      const url = new URL(link.href, window.location.href);
+      if (!url.searchParams.has("status")) return;
+      event.preventDefault();
+      openStatsItems(url.searchParams);
+    });
+    elements.statsItemsList.addEventListener("click", (event) => {
+      const item = event.target.closest(".stats-item[data-id]");
+      if (!item) return;
+      elements.statsItemsDialog.close();
+      openDetail(item.dataset.id);
     });
 
     elements.resultGroups.addEventListener("input", (event) => {

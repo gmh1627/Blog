@@ -568,9 +568,12 @@
   }
 
   function statsItemsForParams(params) {
-    const batch = Number(params.get("batch"));
-    const visitYear = Number(params.get("visitYear"));
-    const visitMonth = Number(params.get("visitMonth"));
+    const batchValue = params.get("batch");
+    const yearValue = params.get("visitYear");
+    const monthValue = params.get("visitMonth");
+    const batch = batchValue ? Number(batchValue) : null;
+    const visitYear = yearValue ? Number(yearValue) : null;
+    const visitMonth = monthValue ? Number(monthValue) : null;
     return units.filter((unit) => {
       if (unit.kind !== "unit" || !recordFor(unit.id).visited) return false;
       if (Number.isInteger(batch) && batch >= 1 && unit.batch !== batch) return false;
@@ -1238,7 +1241,7 @@
       const button = event.target.closest("button[data-province]");
       if (!button) return;
       if (isStatisticsView) {
-        openStatsItems(new URLSearchParams({ status: "visited", province: button.dataset.province }));
+        window.location.href = `./index.html?province=${encodeURIComponent(button.dataset.province)}`;
         return;
       }
       state.province = state.province === button.dataset.province ? "all" : button.dataset.province;

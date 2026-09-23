@@ -34,4 +34,4 @@ git submodule update --init --recursive
 
 国保资料编辑器可通过 `npm run heritage` 启动，具体数据结构和维护方式见 `heritage/README.md`。
 
-铁路交互图位于 `Map/web`，入口文件为 `Map/web/index.html`。直接在地图目录中预览时需要通过本地静态服务器运行，启动方式和图层说明见 `Map/web/README.md`；执行 Hexo 生成时，`scripts/map_publish.js` 会像国保页面一样把它发布到博客的 `/map/` 路径。地图工程在独立仓库中提交后，还需在本仓库更新并提交子模块指针。
+铁路交互图位于 `Map/web`，入口文件为 `Map/web/index.html`；铁路枢纽局部图子页位于 `Map/web/hubs/`，发布后访问 `/map/hubs/`。直接在地图目录中预览时需要通过本地静态服务器运行，启动方式和图层说明见 `Map/web/README.md`；执行 Hexo 生成时，`scripts/map_publish.js` 会像国保页面一样把它发布到博客的 `/map/` 路径。地图工程在独立仓库中提交后，还需在本仓库更新并提交子模块指针。

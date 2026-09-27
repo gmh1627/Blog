@@ -1,0 +1,24 @@
+HTTP/1.1 200 Connection established
+
+HTTP/1.1 303 See Other
+Content-Type: application/binary
+Vary: Origin
+X-Frame-Options: DENY
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: Mon, 01 Jan 1990 00:00:00 GMT
+Date: Sun, 27 Sep 2026 08:21:36 GMT
+Location: https://www.google.com/search?vsrid=CO2FjbfQq5vLDhACGAEiJGI0YmE0ODVjLWI4YTQtNDNiYS05MTMwLWMxM2U0NzE1OWI0MTKBASICdGEoWUJzCi5sZmUtZHVtbXk6OWUyMGM4MTUtYzg2NS00YWRmLWIwNzktODhmNTVhZjQ0MDE2EkEKPy9ibnMvdGEvYm9yZy90YS9ibnMvbGVucy1mcm9udGVuZC1hcGkvcHJvZC5sZW5zLWZyb250ZW5kLWFwaS8yNVoECgJ0YTjWiryaqo6XAw&vsint=CAIqDAoCCAcSAggKGAEgATojChYNAAAAPxUAAAA_HQAAgD8lAACAPzABELIIGMoDJQAAgD8&udm=26&lns_mode=un&source=lns.web.ukn&vsdim=1074,458&gsessionid=Ki5ymrLisNDaWMvQJWEiLjdPpz6quaT73NmqYzqyk_Kb0PXSGjg47w&lsessionid=8wqLMIGu4IvRMV_8XwYjU9pzPCgGskRV_rOZihKQUssZcMp8c7lMpA&lns_surface=26&lns_vfs=e
+P3P: CP="This is not a P3P policy! See g.co/p3phelp for more info."
+Content-Security-Policy: require-trusted-types-for 'script';report-uri /_/LensWebStandaloneUi/cspreport
+Content-Security-Policy: script-src 'report-sample' 'nonce-k-Qy3pZco5WMFZXU6GIOsQ' 'unsafe-inline';object-src 'none';base-uri 'self';report-uri /_/LensWebStandaloneUi/cspreport;worker-src 'self'
+Cross-Origin-Opener-Policy: same-origin
+Accept-CH: Sec-CH-UA-Arch, Sec-CH-UA-Bitness, Sec-CH-UA-Full-Version, Sec-CH-UA-Full-Version-List, Sec-CH-UA-Model, Sec-CH-UA-WoW64, Sec-CH-UA-Form-Factors, Sec-CH-UA-Platform, Sec-CH-UA-Platform-Version
+Permissions-Policy: ch-ua-arch=*, ch-ua-bitness=*, ch-ua-full-version=*, ch-ua-full-version-list=*, ch-ua-model=*, ch-ua-wow64=*, ch-ua-form-factors=*, ch-ua-platform=*, ch-ua-platform-version=*
+Server: ESF
+Content-Length: 0
+X-XSS-Protection: 0
+X-Content-Type-Options: nosniff
+Set-Cookie: NID=CuMBCAESlQEBOxGDSGSqSQYL1OMD4O5fCd10otQDOwMsqbjLlVoe4f6hZyVRkohrCNnlhBnQMMufrAmHeBjMn9LgP9cGjwgrW-E9f3vpBkOwZYIPD08ELI82sPi222T9jlx1me9rer0WcC6TWRlTcdfzUyxs2R51Pk6gaLYhh4uzmM8YxuXhk4nfbF3JAX6pEZA4Dw8pF9HuFJ9RcCgBMkUB0qwHz8ZAw8R0bIKAaPsURr_m87XrQ_Y2gs_qcIHA5WrJKTr0aWBWFocSQEZ9Ijax5Bw20Cf76SduCF192GFvG2mf8Q4; expires=Mon, 29-Mar-2027 08:21:36 GMT; path=/; domain=.google.com; HttpOnly
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+

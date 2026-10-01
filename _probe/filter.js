@@ -1,0 +1,1 @@
+﻿const fs=require('fs');const d=JSON.parse(fs.readFileSync('F:/Desktop/Blog/_probe/toilet-links.json','utf8'));const x=d.filter(o=>/トイレ|便所|公衆|排泄|おしっこ|小便|フェラ|口|働くオンナ|TOILET|覗/.test(o.text));console.log('matches',x.length);console.log(x.map(o=>o.text+'\n'+o.href).join('\n'));fs.writeFileSync('F:/Desktop/Blog/_probe/toilet-filter.txt',x.map(o=>o.text+'\t'+o.href).join('\n'),'utf8');

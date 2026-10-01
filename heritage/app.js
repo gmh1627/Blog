@@ -551,7 +551,7 @@
   }
 
   function parseVisitTime(value) {
-    const match = String(value || "").match(/(?:^|[^\d])((?:19|20)\d{2})(?:\s*(?:[-/.]|年)\s*(0?[1-9]|1[0-2]))?/);
+    const match = String(value || "").match(/(?:^|[^\d])((?:19|20)\d{2})(?:\s*(?:[-/.]|年)\s*(1[0-2]|0?[1-9])(?!\d))?/);
     if (!match) return null;
     return {
       year: Number(match[1]),

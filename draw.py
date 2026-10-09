@@ -9,6 +9,7 @@ from matplotlib.ticker import FuncFormatter
 
 BASE_DIR = Path(__file__).resolve().parent
 POST_PATH = BASE_DIR / "source" / "_posts" / "行旅杂记.md"
+OUTPUT_DIR = BASE_DIR / "统计" / "行程统计"
 
 rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 rcParams["axes.unicode_minus"] = False
@@ -60,7 +61,7 @@ def set_axis_style(ax, *, right_axis=False):
         ax.spines["right"].set_visible(False)
         ax.grid(True, axis="y", linestyle=(0, (4, 4)), linewidth=0.8, color=GRID_COLOR)
 
-    ax.tick_params(axis="both", colors=TEXT_COLOR, labelsize=TICK_FONT_SIZE)
+    ax.tick_params(axis="both", colors=TEXT_COLOR, labelsize=TICK_FONT_SIZE, length=0, pad=8)
 
 
 def apply_figure_layout(fig):
@@ -97,6 +98,9 @@ def annotate_series(
     formatter=None,
     *,
     offset=8,
+    horizontal_offset=0,
+    bbox_pad=0.28,
+    bbox_alpha=0.92,
     vertical_alignment="bottom",
     skip_zeros=False,
 ):
@@ -111,14 +115,14 @@ def annotate_series(
         ax.annotate(
             formatter(y_value),
             xy=(x_value, y_value),
-            xytext=(0, offset),
+            xytext=(horizontal_offset, offset),
             textcoords="offset points",
             ha="center",
             va=vertical_alignment,
             fontsize=ANNOTATION_FONT_SIZE,
             color="white",
             fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.25", fc=color, ec="none", alpha=0.9),
+            bbox=dict(boxstyle=f"round,pad={bbox_pad}", fc=color, ec="none", alpha=bbox_alpha),
             zorder=7,
             clip_on=False,
             annotation_clip=False,
@@ -151,6 +155,7 @@ def draw_area_chart(labels, values, title, ylabel, output_name, line_color, fill
 
     ax.set_xticks(x_values)
     ax.set_xticklabels(labels)
+    ax.tick_params(axis="x", pad=10)
     ax.set_xlim(-0.2, len(labels) - 0.8)
     ax.set_ylim(0, padded_upper_limit(values))
     ax.set_ylabel(ylabel, fontsize=AXIS_LABEL_FONT_SIZE, color=SUBTLE_TEXT_COLOR)
@@ -158,7 +163,7 @@ def draw_area_chart(labels, values, title, ylabel, output_name, line_color, fill
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{int(value)}"))
 
     apply_figure_layout(fig)
-    fig.savefig(BASE_DIR / output_name, facecolor=fig.get_facecolor())
+    fig.savefig(OUTPUT_DIR / output_name, facecolor=fig.get_facecolor())
     plt.close(fig)
 
 
@@ -282,6 +287,7 @@ def draw_dual_axis_chart(
     count_fill,
     distance_color,
     distance_fill,
+    legacy_style=False,
 ):
     """Draw a dual-axis line chart for yearly trip counts and mileage."""
     fig, ax_left = plt.subplots(figsize=CHART_FIGSIZE)
@@ -291,6 +297,26 @@ def draw_dual_axis_chart(
     ax_right = ax_left.twinx()
     set_axis_style(ax_right, right_axis=True)
     ax_right.grid(False)
+    ax_right.patch.set_visible(False)
+
+    if legacy_style:
+        # 保留铁路图原有的刻度节奏和双轴填充层次。
+        ax_left.tick_params(axis="both", length=3.5, pad=3.5)
+        ax_right.tick_params(axis="both", length=3.5, pad=3.5)
+
+    fill_alpha = (0.24, 0.14) if legacy_style else (0.13, 0.08)
+    count_annotation = {
+        "offset": -12 if legacy_style else -23,
+        "horizontal_offset": 0 if legacy_style else -7,
+        "bbox_pad": 0.25 if legacy_style else 0.28,
+        "bbox_alpha": 0.9 if legacy_style else 0.92,
+    }
+    distance_annotation = {
+        "offset": 12 if legacy_style else 17,
+        "horizontal_offset": 0 if legacy_style else 7,
+        "bbox_pad": 0.25 if legacy_style else 0.28,
+        "bbox_alpha": 0.9 if legacy_style else 0.92,
+    }
 
     x_values = list(range(len(years)))
 
@@ -307,7 +333,7 @@ def draw_dual_axis_chart(
         solid_capstyle="round",
         zorder=4,
     )
-    ax_left.fill_between(x_values, counts, color=count_fill, alpha=0.24, zorder=1)
+    ax_left.fill_between(x_values, counts, color=count_fill, alpha=fill_alpha[0], zorder=1)
 
     distance_line, = ax_right.plot(
         x_values,
@@ -322,7 +348,7 @@ def draw_dual_axis_chart(
         solid_capstyle="round",
         zorder=4,
     )
-    ax_right.fill_between(x_values, distances, color=distance_fill, alpha=0.14, zorder=1)
+    ax_right.fill_between(x_values, distances, color=distance_fill, alpha=fill_alpha[1], zorder=1)
 
     annotate_series(
         ax_left,
@@ -330,9 +356,9 @@ def draw_dual_axis_chart(
         counts,
         count_color,
         formatter=lambda value: f"{int(value)}",
-        offset=-12,
         vertical_alignment="top",
         skip_zeros=True,
+        **count_annotation,
     )
     annotate_series(
         ax_right,
@@ -340,13 +366,14 @@ def draw_dual_axis_chart(
         distances,
         distance_color,
         formatter=lambda value: f"{int(value):,}",
-        offset=12,
         vertical_alignment="bottom",
         skip_zeros=True,
+        **distance_annotation,
     )
 
     ax_left.set_xticks(x_values)
     ax_left.set_xticklabels([str(year) for year in years])
+    ax_left.tick_params(axis="x", pad=3.5 if legacy_style else 10)
     ax_left.set_xlim(-0.2, len(years) - 0.8)
     ax_left.set_ylim(lower_padding_from_zero(counts, 0.8), padded_upper_limit(counts))
     ax_right.set_ylim(lower_padding_from_zero(distances, 180), padded_upper_limit(distances))
@@ -359,12 +386,18 @@ def draw_dual_axis_chart(
     ax_right.yaxis.set_major_formatter(FuncFormatter(lambda value, _: f"{int(value):,}"))
     ax_left.set_title(title, fontsize=TITLE_FONT_SIZE, fontweight="bold", pad=TITLE_PAD, color=TEXT_COLOR)
 
+    legend_kwargs = {} if legacy_style else {
+        "borderpad": 0.55,
+        "labelspacing": 0.45,
+        "handlelength": 2.2,
+    }
     legend = ax_left.legend(
         [count_line, distance_line],
         ["出行频次", "年度里程"],
         loc="upper left",
         frameon=True,
         fontsize=LEGEND_FONT_SIZE,
+        **legend_kwargs,
     )
     legend.get_frame().set_facecolor(AXIS_BACKGROUND)
     legend.get_frame().set_edgecolor("#E1D7C8")
@@ -384,11 +417,12 @@ def draw_dual_axis_chart(
     )
 
     apply_figure_layout(fig)
-    fig.savefig(BASE_DIR / output_name, facecolor=fig.get_facecolor())
+    fig.savefig(OUTPUT_DIR / output_name, facecolor=fig.get_facecolor())
     plt.close(fig)
 
 
 def main():
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     markdown_text = POST_PATH.read_text(encoding="utf-8")
 
     draw_area_chart(
@@ -429,6 +463,7 @@ def main():
         count_fill="#9CC9E3",
         distance_color="#C56B29",
         distance_fill="#F2BE8B",
+        legacy_style=True,
     )
     draw_dual_axis_chart(
         years,
@@ -442,7 +477,7 @@ def main():
         distance_fill="#F3A89D",
     )
 
-    print("图表已重新生成：new_cities.png, cumulative_cities.png, railway_yearly_stats.png, flight_yearly_stats.png")
+    print(f"图表已重新生成并保存到 '{OUTPUT_DIR}'：new_cities.png, cumulative_cities.png, railway_yearly_stats.png, flight_yearly_stats.png")
 
 
 if __name__ == "__main__":

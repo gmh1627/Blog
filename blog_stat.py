@@ -8,6 +8,10 @@ from datetime import datetime
 from collections import defaultdict
 from urllib.parse import urljoin
 
+# 所有统计文档统一放在脚本所在项目目录下，避免从其他工作目录运行时写到意外位置。
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+WORD_STATS_DIR = os.path.join(BASE_DIR, "统计", "字数统计")
+
 # 设为 True 可强制重新爬取读书笔记（即使文件已存在）
 FORCE_RESCRAPE_DUSHU = True
 
@@ -247,7 +251,11 @@ def get_articles_from_page(url):
 
 def write_to_markdown(all_articles, total_word_count, filename="游记统计.md", title="游记类别字数统计"):
     """将统计结果写入 Markdown 文件"""
-    with open(filename, 'w', encoding='utf-8') as f:
+    # 只接受文件名，统一写入字数统计目录，避免输出散落在项目根目录。
+    output_path = os.path.join(WORD_STATS_DIR, os.path.basename(filename))
+    os.makedirs(WORD_STATS_DIR, exist_ok=True)
+
+    with open(output_path, 'w', encoding='utf-8') as f:
         # 写入标题和时间
         f.write(f"# {title}\n\n")
         f.write(f"统计时间： {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
@@ -425,7 +433,7 @@ if youji_articles:
     write_to_markdown(youji_articles, youji_total,
                       filename="游记统计.md",
                       title="游记类别字数统计")
-    print(f"\n统计结果已保存到 '游记统计.md' 文件")
+    print(f"\n统计结果已保存到 '{os.path.join(WORD_STATS_DIR, '游记统计.md')}' 文件")
 else:
     print(f"\n没有找到游记文章，未生成文件")
 
@@ -448,7 +456,7 @@ if combined_articles:
     write_to_markdown(combined_articles, combined_total,
                       filename="文章统计.md",
                       title="文章字数统计（游记 + 指定文章）")
-    print(f"\n统计结果已保存到 '文章统计.md' 文件")
+    print(f"\n统计结果已保存到 '{os.path.join(WORD_STATS_DIR, '文章统计.md')}' 文件")
 else:
     print(f"\n没有找到任何文章，未生成 '文章统计.md'")
 
@@ -456,7 +464,7 @@ update_journey_index_word_counts(known_articles=combined_articles)
 
 
 # ===== 3. 读书笔记类别 =====
-DUSHU_FILE = "读书笔记统计.md"
+DUSHU_FILE = os.path.join(WORD_STATS_DIR, "读书笔记统计.md")
 if not FORCE_RESCRAPE_DUSHU and os.path.exists(DUSHU_FILE):
     print(f"\n[读书笔记] '{DUSHU_FILE}' 已存在，跳过爬取。")
     print(f"  如需重新统计，请将脚本顶部的 FORCE_RESCRAPE_DUSHU 设为 True。")

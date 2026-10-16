@@ -8,14 +8,14 @@ from datetime import datetime
 from collections import defaultdict
 from urllib.parse import urljoin
 
-# 所有统计文档统一放在脚本所在项目目录下，避免从其他工作目录运行时写到意外位置。
+# 所有统计文档统一放在脚本所在的统计目录下，避免受运行目录影响。
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-WORD_STATS_DIR = os.path.join(BASE_DIR, "统计", "字数统计")
+WORD_STATS_DIR = os.path.join(BASE_DIR, "字数统计")
 
 # 设为 True 可强制重新爬取读书笔记（即使文件已存在）
 FORCE_RESCRAPE_DUSHU = True
 
-JOURNEY_INDEX_FILE = os.path.join("source", "journey", "index.md")
+JOURNEY_INDEX_FILE = os.path.join(os.path.dirname(BASE_DIR), "source", "journey", "index.md")
 SITE_URL = "https://kangaroogao.com/"
 JOURNEY_EXCLUDED_TITLES = {"行程轨迹汇总"}
 

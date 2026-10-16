@@ -8,8 +8,8 @@ from matplotlib.ticker import FuncFormatter
 
 
 BASE_DIR = Path(__file__).resolve().parent
-POST_PATH = BASE_DIR / "source" / "_posts" / "行旅杂记.md"
-OUTPUT_DIR = BASE_DIR / "统计" / "行程统计"
+POST_PATH = BASE_DIR.parent / "source" / "_posts" / "行旅杂记.md"
+OUTPUT_DIR = BASE_DIR / "行程统计"
 
 rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
 rcParams["axes.unicode_minus"] = False

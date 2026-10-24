@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const recordsPath = resolve(appRoot, "data", "visits.private.json");
-const port = Number(process.env.HERITAGE_PORT || 4173);
+const port = Number(process.env.HERITAGE_PORT || 5173);
 const host = "127.0.0.1";
 const maximumBodySize = 10 * 1024 * 1024;
 const historyLimit = 50;

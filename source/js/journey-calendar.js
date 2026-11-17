@@ -24,15 +24,16 @@
     }
     const links = record.articles.map((article) => `<a href="${escape(article.url)}">${escape(article.title)} ↗</a>`).join('');
     const events = record.events.map((event) => {
-      if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">游览${event.city ? ` · ${escape(event.city)}` : ''}</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${escape(event.details || event.city)}</p></li>`;
+      if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">游览</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${event.city ? `<strong class="jc-visit-city">${escape(event.city)}${event.details ? '：' : ''}</strong>` : ''}${escape(event.details)}</p></li>`;
       const kind = event.type === 'train' ? '铁路' : '航班';
       const phase = event.phase === 'arrival' ? '抵达' : event.arrivalDate > event.date ? '出发 · 跨夜' : '';
       let time = event.time;
-      if (event.phase === 'arrival') time = `${event.clock} 抵达 · ${event.departureDate.replaceAll('-', '.')} 出发`;
-      else if (event.arrivalDate > event.date) time = `${event.clock} 出发 · ${event.arrivalDate.replaceAll('-', '.')} 抵达`;
-      return `<li class="jc-event ${event.type}"><span class="jc-event-kind">${kind}${phase ? ` · ${phase}` : ''}</span><strong>${escape(event.origin)} <span aria-label="到">→</span> ${escape(event.destination)}</strong><p class="jc-transport-meta">${escape(event.code)} · ${event.distance.toLocaleString('zh-CN')} km${time ? `<br>${escape(time)}` : ''}</p></li>`;
+      const clocks = [...event.time.matchAll(/\d{1,2}:\d{2}/g)].map((match) => match[0]);
+      if (event.phase === 'arrival') time = `${event.clock} 抵达 · ${event.departureDate.replaceAll('-', '.')} ${clocks[0] || ''} 出发`;
+      else if (event.arrivalDate > event.date) time = `${event.clock} 出发 · ${event.arrivalDate.replaceAll('-', '.')} ${clocks.at(-1) || ''} 抵达`;
+      return `<li class="jc-event ${event.type}"><span class="jc-event-kind">${kind}${phase ? ` · ${phase}` : ''}</span><strong>${escape(event.origin)} <span aria-label="到">→</span> ${escape(event.destination)}</strong><p class="jc-transport-meta">${escape(event.code)} · ${event.distance.toLocaleString('zh-CN')} km${time ? `<br>${escape(time)}` : ''}${event.note ? `<br>${escape(event.note)}` : ''}</p></li>`;
     }).join('');
-    element('detail').innerHTML = `${title}<div class="jc-article-links" aria-label="当天的游记">${links}</div><ol class="jc-timeline">${events}</ol>`;
+    element('detail').innerHTML = `${title}${links ? `<div class="jc-article-links" aria-label="当天的游记">${links}</div>` : ''}<ol class="jc-timeline">${events}</ol>`;
   }
 
   function render() {
@@ -95,7 +96,7 @@
     root.querySelector(`[data-date="${selected}"]`).focus();
   });
 
-  fetch(root.dataset.calendarUrl).then((response) => {
+  fetch(root.dataset.calendarUrl, { cache: 'no-cache' }).then((response) => {
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     return response.json();
   }).then((payload) => {

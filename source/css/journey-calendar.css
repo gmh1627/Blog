@@ -26,9 +26,9 @@
 #journey-calendar .has-events { font-weight: 650; color: var(--jc-ink); background: var(--jc-bg); }
 #journey-calendar .jc-date[aria-pressed="true"] { color: white; background: var(--jc-accent); }
 .jc-dots { display: flex; justify-content: center; gap: 3px; min-height: 8px; padding-top: 2px; }
-.jc-dot { display: inline-block; width: 5px; height: 5px; border-radius: 50%; flex: 0 0 auto; }
-.jc-dot.visit { background: #4d8e75; }.jc-dot.train { background: #c08a4c; }.jc-dot.flight { background: #7596b1; }
-.jc-date[aria-pressed="true"] .jc-dot { background: white; }
+.jc-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; flex: 0 0 auto; }
+.jc-dot.visit { background: #159447; }.jc-dot.train { background: #e56811; border-radius: 1px; }.jc-dot.flight { background: #694de0; border-radius: 1px; transform: rotate(45deg); }
+.jc-date[aria-pressed="true"] .jc-dot { outline: 1px solid white; }
 .jc-month-foot { display: flex; justify-content: space-between; align-items: center; gap: 5px; border-top: 1px solid var(--jc-line); margin-top: 12px; padding-top: 12px; font-size: 11px; color: var(--jc-muted); }
 #journey-calendar .jc-month-foot button { font-size: 11px; color: var(--jc-accent); padding: 3px; }
 .jc-key { display: flex; gap: 14px; margin-top: 10px; color: var(--jc-muted); font-size: 10px; }
@@ -36,20 +36,21 @@
 .jc-detail { min-width: 0; max-height: 570px; overflow: auto; padding: 1px 6px 4px 0; scrollbar-width: thin; }
 .jc-day-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 19px; font-weight: 650; letter-spacing: .02em; }
 .jc-day-heading > span:last-child { font-size: 11px; font-weight: 400; color: var(--jc-muted); }
-.jc-article-links { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin: 11px 0 19px; font-size: 12px; }
+.jc-article-links { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; margin: 11px 0 19px; font-size: 16px; font-weight: 600; line-height: 1.7; }
 #journey-calendar .jc-timeline { margin: 0 0 0 4px; padding: 0; list-style: none; }
 #journey-calendar .jc-event { position: relative; margin: 0; padding: 0 0 22px 17px; border-left: 1px solid #cad9ce; }
-#journey-calendar .jc-event::before { content: ''; position: absolute; top: 6px; left: -4px; width: 7px; height: 7px; background: #4d8e75; border: 1px solid var(--jc-bg); border-radius: 50%; }
-#journey-calendar .jc-event.train::before { background: #c08a4c; }#journey-calendar .jc-event.flight::before { background: #7596b1; }
+#journey-calendar .jc-event::before { content: ''; position: absolute; top: 6px; left: -5px; width: 9px; height: 9px; background: #159447; border: 1px solid var(--jc-bg); border-radius: 50%; }
+#journey-calendar .jc-event.train::before { background: #e56811; border-radius: 1px; }#journey-calendar .jc-event.flight::before { background: #694de0; border-radius: 1px; transform: rotate(45deg); }
 #journey-calendar .jc-event:last-child { padding-bottom: 0; border-color: transparent; }
 .jc-event-kind { display: block; font-size: 11px; color: var(--jc-muted); margin-bottom: 4px; }
 #journey-calendar .jc-event p { font-size: 13px; line-height: 1.85; overflow-wrap: anywhere; }
 .jc-event strong { display: block; font-size: 14px; font-weight: 650; }
+#journey-calendar strong.jc-visit-city { display: inline; font-size: inherit; font-weight: 700; }
 .jc-event small { display: block; font-size: 10px; color: var(--jc-muted); }
 #journey-calendar p.jc-transport-meta { font-size: 12px; color: var(--jc-muted); margin-top: 3px; }
 .jc-empty { padding: 35px 0; color: var(--jc-muted); font-size: 14px; }.jc-empty p { font-size: 12px; margin-top: 8px !important; }
 [data-theme="dark"] .journey-calendar { --jc-ink: #d9e4de; --jc-muted: #a3b6aa; --jc-line: #34483d; --jc-paper: #202c26; --jc-bg: #19231e; --jc-accent: #76b69f; }
 [data-theme="dark"] #journey-calendar .jc-date[aria-pressed="true"] { color: #14281e; }
-[data-theme="dark"] .jc-date[aria-pressed="true"] .jc-dot { background: #14281e; }
+[data-theme="dark"] .jc-date[aria-pressed="true"] .jc-dot { outline-color: #14281e; }
 @media (max-width: 1000px) { .jc-layout { grid-template-columns: minmax(240px, .9fr) minmax(0, 1fr); gap: 16px; }.journey-calendar { padding: 19px; } }
 @media (max-width: 700px) { .journey-calendar { padding: 15px; border-radius: 11px; }.jc-heading { margin-bottom: 16px; gap: 9px; }#journey-calendar h2 { font-size: 23px; }.jc-heading p { font-size: 11px; }.jc-heading > a { font-size: 11px; }.jc-layout { grid-template-columns: 1fr; gap: 20px; }.jc-detail { max-height: none; overflow: visible; padding: 0 2px; }.jc-month-panel { padding: 12px; }#journey-calendar .jc-date { min-height: 42px; } }

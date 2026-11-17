@@ -12,6 +12,7 @@
   let month;
   let firstYear;
   let lastYear;
+  let view = 'month';
 
   function renderDetail() {
     const record = data.days[selected];
@@ -36,25 +37,49 @@
     element('detail').innerHTML = `${title}${links ? `<div class="jc-article-links" aria-label="当天的游记">${links}</div>` : ''}<ol class="jc-timeline">${events}</ol>`;
   }
 
-  function render() {
-    element('year').value = String(year);
-    element('month').value = String(month);
-    const start = (new Date(Date.UTC(year, month - 1, 1)).getUTCDay() + 6) % 7;
-    const length = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  function monthGrid(displayYear, displayMonth) {
+    const start = (new Date(Date.UTC(displayYear, displayMonth - 1, 1)).getUTCDay() + 6) % 7;
+    const length = new Date(Date.UTC(displayYear, displayMonth, 0)).getUTCDate();
     let html = '<span class="jc-blank" aria-hidden="true"></span>'.repeat(start);
     let count = 0;
     for (let day = 1; day <= length; day++) {
-      const date = iso(year, month, day);
+      const date = iso(displayYear, displayMonth, day);
       const events = data.days[date]?.events || [];
       if (events.length) count++;
       const kinds = [...new Set(events.map((event) => event.type))];
       const labels = { visit: '游览', train: '铁路', flight: '航班' };
-      html += `<button type="button" class="jc-date${events.length ? ' has-events' : ''}" data-date="${date}" aria-pressed="${date === selected}" aria-label="${year}年${month}月${day}日${kinds.length ? '，' + kinds.map((kind) => labels[kind]).join('、') : '，暂无记录'}"><span>${day}</span><span class="jc-dots" aria-hidden="true">${kinds.map((kind) => `<i class="jc-dot ${kind}"></i>`).join('')}</span></button>`;
+      html += `<button type="button" class="jc-date${events.length ? ' has-events' : ''}" data-date="${date}" aria-pressed="${date === selected}" aria-label="${displayYear}年${displayMonth}月${day}日${kinds.length ? '，' + kinds.map((kind) => labels[kind]).join('、') : '，暂无记录'}"><span>${day}</span><span class="jc-dots" aria-hidden="true">${kinds.map((kind) => `<i class="jc-dot ${kind}"></i>`).join('')}</span></button>`;
     }
-    element('grid').innerHTML = html;
-    element('month-summary').textContent = `本月 ${count} 天有记录`;
-    root.querySelector('[data-action="previous"]').disabled = year === firstYear && month === 1;
-    root.querySelector('[data-action="next"]').disabled = year === lastYear && month === 12;
+    return { html, count };
+  }
+
+  function render() {
+    element('year').value = String(year);
+    element('month').value = String(month);
+    root.dataset.view = view;
+    element('month-label').hidden = view === 'year';
+    element('weekdays').hidden = view === 'year';
+    root.querySelectorAll('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+    element('grid').className = view === 'year' ? 'jc-year-grid' : 'jc-grid';
+    if (view === 'year') {
+      let count = 0;
+      element('grid').innerHTML = Array.from({ length: 12 }, (_, index) => {
+        const grid = monthGrid(year, index + 1);
+        count += grid.count;
+        return `<section class="jc-year-month" aria-label="${year}年${index + 1}月"><button type="button" class="jc-year-month-title" data-month="${index + 1}" aria-label="查看${year}年${index + 1}月月视图">${index + 1} 月 <span>↗</span></button><div class="jc-weekdays" aria-hidden="true">${['一','二','三','四','五','六','日'].map((day) => `<span>${day}</span>`).join('')}</div><div class="jc-grid">${grid.html}</div></section>`;
+      }).join('');
+      element('month-summary').textContent = `${year} 年 · ${count} 天有记录`;
+    } else {
+      const grid = monthGrid(year, month);
+      element('grid').innerHTML = grid.html;
+      element('month-summary').textContent = `本月 ${grid.count} 天有记录`;
+    }
+    const previous = root.querySelector('[data-action="previous"]');
+    const next = root.querySelector('[data-action="next"]');
+    previous.disabled = year === firstYear && (view === 'year' || month === 1);
+    next.disabled = year === lastYear && (view === 'year' || month === 12);
+    previous.setAttribute('aria-label', view === 'year' ? '上一年' : '上个月');
+    next.setAttribute('aria-label', view === 'year' ? '下一年' : '下个月');
     renderDetail();
   }
 
@@ -73,16 +98,29 @@
     select(Object.keys(data.days).find((date) => date.startsWith(prefix)) || `${prefix}-01`);
   }
 
+  function changeYear(nextYear) {
+    if (nextYear < firstYear || nextYear > lastYear) return;
+    select(Object.keys(data.days).find((date) => date.startsWith(`${nextYear}-`)) || `${nextYear}-01-01`);
+  }
+
   root.addEventListener('click', (event) => {
-    const dateButton = event.target.closest('[data-date]');
-    if (dateButton) { select(dateButton.dataset.date); return; }
-    const action = event.target.closest('[data-action]')?.dataset.action;
     if (!data) return;
-    if (action === 'previous') changeMonth(year, month - 1);
-    if (action === 'next') changeMonth(year, month + 1);
+    const viewButton = event.target.closest('button[data-view]');
+    if (viewButton) { view = viewButton.dataset.view; render(); return; }
+    const monthButton = event.target.closest('[data-month]');
+    if (monthButton) { view = 'month'; changeMonth(year, Number(monthButton.dataset.month)); return; }
+    const dateButton = event.target.closest('[data-date]');
+    if (dateButton) {
+      select(dateButton.dataset.date);
+      if (view === 'year') element('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    const action = event.target.closest('[data-action]')?.dataset.action;
+    if (action === 'previous') view === 'year' ? changeYear(year - 1) : changeMonth(year, month - 1);
+    if (action === 'next') view === 'year' ? changeYear(year + 1) : changeMonth(year, month + 1);
     if (action === 'latest') select(Object.keys(data.days).at(-1));
   });
-  element('year').addEventListener('change', () => changeMonth(Number(element('year').value), month));
+  element('year').addEventListener('change', () => view === 'year' ? changeYear(Number(element('year').value)) : changeMonth(Number(element('year').value), month));
   element('month').addEventListener('change', () => changeMonth(year, Number(element('month').value)));
   element('grid').addEventListener('keydown', (event) => {
     const button = event.target.closest('[data-date]');

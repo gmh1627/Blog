@@ -9,6 +9,23 @@
 #journey-calendar a { color: var(--jc-accent); text-decoration: none; border-bottom: 1px solid transparent; }
 #journey-calendar a:hover { border-color: currentColor; }
 .jc-heading > a { white-space: nowrap; font-size: 12px; }
+.jc-view-buttons { display: inline-flex; gap: 3px; padding: 3px; margin: -7px 0 18px; border: 1px solid var(--jc-line); border-radius: 8px; background: var(--jc-paper); }
+#journey-calendar .jc-view-buttons button { padding: 5px 14px; font-size: 12px; border-radius: 5px; }
+#journey-calendar .jc-view-buttons button[aria-pressed="true"] { background: var(--jc-accent); color: var(--jc-paper); }
+#journey-calendar [hidden] { display: none !important; }
+.journey-calendar[data-view="year"] .jc-layout { grid-template-columns: 1fr; }
+.journey-calendar[data-view="year"] .jc-detail { max-height: none; overflow: visible; }
+.jc-year-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px 12px; }
+.jc-year-month { min-width: 0; padding: 7px; border: 1px solid var(--jc-line); border-radius: 8px; }
+#journey-calendar .jc-year-month-title { display: flex; justify-content: space-between; width: 100%; padding: 0 2px 7px; font-size: 13px; font-weight: 650; text-align: left; }
+.jc-year-month-title span { font-size: 11px; color: var(--jc-muted); }
+#journey-calendar .jc-year-grid .jc-date { min-height: 25px; font-size: 11px; border-radius: 4px; }
+.jc-year-grid .jc-grid { gap: 2px; }
+.jc-year-grid .jc-weekdays { font-size: 9px; gap: 2px; }
+.jc-year-grid .jc-dot { width: 4px; height: 4px; }
+.jc-year-grid .jc-dots { gap: 2px; min-height: 6px; padding-top: 1px; }
+@media (max-width: 1000px) { .jc-year-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) { .jc-year-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 8px; }.jc-year-month { padding: 5px; } }
 .jc-layout { display: grid; grid-template-columns: minmax(250px, .9fr) minmax(0, 1.1fr); gap: 24px; align-items: start; }
 .jc-month-panel { background: var(--jc-paper); border: 1px solid var(--jc-line); border-radius: 12px; padding: 14px; }
 #journey-calendar button { cursor: pointer; font: inherit; color: inherit; border: 0; border-radius: 7px; background: none; padding: 0; }

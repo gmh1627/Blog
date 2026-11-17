@@ -22,22 +22,24 @@ hexo.extend.filter.register('after_generate', async function () {
   await fs.mkdir(outputRoot, { recursive: true });
   const entries = await fs.readdir(sourceRoot, { withFileTypes: true });
   const dataRoot = path.join(sourceRoot, 'data');
-  const dataNames = (await fs.readdir(dataRoot)).filter((name) => name.endsWith('.geojson'));
+  const dataNames = (await fs.readdir(dataRoot)).filter((name) => name.endsWith('.geojson') || name === 'startup.json.gz').sort();
   const dataContents = await Promise.all(
     dataNames.map((name) => fs.readFile(path.join(dataRoot, name)))
   );
   const dataVersion = contentVersion(Buffer.concat(dataContents));
-  const [indexHtml, appJs, stylesCss] = await Promise.all([
+  const [indexHtml, appJs, stylesCss, codecJs] = await Promise.all([
     fs.readFile(path.join(sourceRoot, 'index.html'), 'utf8'),
     fs.readFile(path.join(sourceRoot, 'app.js'), 'utf8'),
     fs.readFile(path.join(sourceRoot, 'styles.css'), 'utf8'),
+    fs.readFile(path.join(sourceRoot, 'data-codec.js'), 'utf8'),
   ]);
   const publishedApp = appJs.replace(
-    /geojson\?v=[0-9-]+/,
-    `geojson?v=${dataVersion}`
+    /const DATA_VERSION = "[^"]+";/,
+    `const DATA_VERSION = "${dataVersion}";`
   );
   const publishedIndex = indexHtml
     .replace(/styles\.css\?v=[^"]+/, `styles.css?v=${contentVersion(stylesCss)}`)
+    .replace(/data-codec\.js\?v=[^"]+/, `data-codec.js?v=${contentVersion(codecJs)}`)
     .replace(/app\.js\?v=[^"]+/, `app.js?v=${contentVersion(publishedApp)}`);
 
   await Promise.all([

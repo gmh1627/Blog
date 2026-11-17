@@ -78,14 +78,13 @@ const routes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../Map/web/da
 const reviewedRows = fs.readFileSync(path.resolve(__dirname, '../Map/制图工具/scripts/travel_history/railway_records.csv'), 'utf8').trim().split(/\r?\n/).slice(1).map((line) => line.split('|'));
 const dayOrder = (date) => data.days[date].events.map((event) => event.type === 'visit' ? event.city : `${event.code}:${event.phase}`);
 
-test('all 148 reviewed identities, dates, clocks, distances and notes reach the web', () => {
-  assert.equal(routes.length, 148);
-  assert.equal(reviewedRows.length, 148);
+test('all reviewed identities, dates, clocks, distances and notes reach the web', () => {
+  assert.equal(routes.length, reviewedRows.length);
   for (const [seq, date, origin, destination, train, km, time, note] of reviewedRows) {
     const p = routes.find((f) => f.properties.seq === Number(seq)).properties;
     assert.deepEqual([p.date, p.origin, p.destination, p.train, p.table_km, p.time, p.note], [date, origin, destination, train, Number(km), time, note], `route ${seq}`);
   }
-  assert.equal(routes.reduce((sum, f) => sum + f.properties.table_km, 0), 62666);
+  assert.equal(routes.reduce((sum, f) => sum + f.properties.table_km, 0), reviewedRows.reduce((sum, row) => sum + Number(row[5]), 0));
 });
 
 test('corrected Qiyang to Yongzhou visits stay between the appropriate trains', () => {

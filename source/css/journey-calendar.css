@@ -15,6 +15,12 @@
 #journey-calendar [hidden] { display: none !important; }
 .journey-calendar[data-view="year"] .jc-layout { grid-template-columns: 1fr; }
 .journey-calendar[data-view="year"] .jc-detail { max-height: none; overflow: visible; }
+#journey-calendar .jc-modal { width: min(480px, calc(100vw - 32px)); max-height: min(82vh, 800px); max-height: min(82dvh, 800px); margin: auto; padding: 0; border: 1px solid var(--jc-line); border-radius: 20px; background: var(--jc-paper); color: var(--jc-ink); box-shadow: 0 24px 80px #0005; overflow: auto; scrollbar-width: thin; }
+#journey-calendar .jc-modal::backdrop { background: #10251f99; backdrop-filter: blur(3px); }
+#journey-calendar .jc-modal-close { position: sticky; top: 10px; z-index: 1; display: block; width: 32px; height: 32px; margin: 10px 10px -42px auto; border-radius: 50%; background: var(--jc-paper); color: var(--jc-muted); font-size: 25px; line-height: 1; }
+#journey-calendar .jc-modal .jc-detail { padding: 26px 26px 28px; }
+#journey-calendar .jc-modal .jc-day-heading { padding-right: 28px; }
+@media (max-width: 700px) { #journey-calendar .jc-modal .jc-detail { padding: 24px 20px; } }
 .jc-year-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 15px 12px; }
 .jc-year-month { min-width: 0; padding: 7px; border: 1px solid var(--jc-line); border-radius: 8px; }
 #journey-calendar .jc-year-month-title { display: flex; justify-content: space-between; width: 100%; padding: 0 2px 7px; font-size: 13px; font-weight: 650; text-align: left; }

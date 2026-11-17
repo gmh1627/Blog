@@ -3,11 +3,11 @@
 const { buildCalendar } = require('../lib/journey-calendar.cjs');
 
 hexo.extend.generator.register('journey-calendar-data', function () {
-  return { path: 'journey/calendar.json', data: JSON.stringify(buildCalendar(hexo.base_dir)) };
+  return { path: 'journey/calendar.json', data: JSON.stringify(buildCalendar(hexo.base_dir, hexo.config.marked)) };
 });
 
 hexo.extend.tag.register('journey_calendar', function () {
-  return `<link rel="stylesheet" href="/css/journey-calendar.css?v=20261117-2">
+  return `<link rel="stylesheet" href="/css/journey-calendar.css?v=20261117-4">
 <section id="journey-calendar" class="journey-calendar" aria-label="行走的日子" data-calendar-url="/journey/calendar.json">
   <div class="jc-heading"><h2>行走的日子</h2><a href="/map/">铁路地图 ↗</a></div>
   <div class="jc-view-buttons" role="group" aria-label="日历视图"><button type="button" data-view="month" aria-pressed="true">月视图</button><button type="button" data-view="year" aria-pressed="false">全年视图</button></div>
@@ -16,8 +16,9 @@ hexo.extend.tag.register('journey_calendar', function () {
     <div class="jc-weekdays" data-role="weekdays" aria-hidden="true"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
     <div class="jc-grid" data-role="grid" role="group" aria-label="选择日期"></div>
     <div class="jc-month-foot"><span data-role="month-summary"></span><button type="button" data-action="latest">最近记录</button></div>
-    <div class="jc-key"><span><i class="jc-dot visit"></i>游览</span><span><i class="jc-dot train"></i>铁路</span><span><i class="jc-dot flight"></i>航班</span></div>
-  </div><div class="jc-detail" data-role="detail" aria-live="polite"><p>正在读取行程…</p></div></div>
+    <div class="jc-key"><span><i class="jc-dot visit"></i>到访</span><span><i class="jc-dot train"></i>铁路</span><span><i class="jc-dot flight"></i>航班</span></div>
+  </div><div data-role="detail-home"><div class="jc-detail" data-role="detail" aria-live="polite"><p>正在读取行程…</p></div></div></div>
+  <dialog class="jc-modal" data-role="modal" aria-labelledby="jc-selected-date"><button class="jc-modal-close" type="button" data-action="close-modal" aria-label="关闭行程卡片">×</button><div data-role="modal-content"></div></dialog>
   <noscript>请启用 JavaScript 查看旅行日历。</noscript>
-</section><script defer src="/js/journey-calendar.js?v=20261117-2"></script>`;
+</section><script defer src="/js/journey-calendar.js?v=20261117-4"></script>`;
 });

@@ -13,19 +13,41 @@
   let firstYear;
   let lastYear;
   let view = 'month';
+  const modal = element('modal');
+  let previousOverflow = '';
+
+  function openDetail() {
+    if (modal.open) return;
+    previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    modal.showModal();
+  }
+
+  function closeDetail() {
+    if (modal.open) modal.close();
+  }
+
+  modal.addEventListener('close', () => {
+    document.body.style.overflow = previousOverflow;
+    root.querySelector(`[data-date="${selected}"]`)?.focus({ preventScroll: true });
+  });
+  modal.addEventListener('click', (event) => {
+    const box = modal.getBoundingClientRect();
+    if (event.target === modal && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDetail();
+  });
 
   function renderDetail() {
     const record = data.days[selected];
     const date = new Date(`${selected}T00:00:00+08:00`);
     const weekday = new Intl.DateTimeFormat('zh-CN', { weekday: 'long', timeZone: 'Asia/Shanghai' }).format(date);
-    const title = `<div class="jc-day-heading"><span>${selected.replaceAll('-', '.')}</span><span>${weekday}</span></div>`;
+    const title = `<div class="jc-day-heading"><span id="jc-selected-date">${selected.replaceAll('-', '.')}</span><span>${weekday}</span></div>`;
     if (!record) {
       element('detail').innerHTML = `${title}<div class="jc-empty">这一天还没有记录。<p>选一个带圆点的日期，查看行程和交通。</p></div>`;
       return;
     }
     const links = record.articles.map((article) => `<a href="${escape(article.url)}">${escape(article.title)} ↗</a>`).join('');
     const events = record.events.map((event) => {
-      if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">游览</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${event.city ? `<strong class="jc-visit-city">${escape(event.city)}${event.details ? '：' : ''}</strong>` : ''}${escape(event.details)}</p></li>`;
+      if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">到访</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${event.city ? `<strong class="jc-visit-city">${escape(event.city)}${event.details ? '：' : ''}</strong>` : ''}${escape(event.details)}</p></li>`;
       const kind = event.type === 'train' ? '铁路' : '航班';
       const phase = event.phase === 'arrival' ? '抵达' : event.arrivalDate > event.date ? '出发 · 跨夜' : '';
       let time = event.time;
@@ -47,7 +69,7 @@
       const events = data.days[date]?.events || [];
       if (events.length) count++;
       const kinds = [...new Set(events.map((event) => event.type))];
-      const labels = { visit: '游览', train: '铁路', flight: '航班' };
+      const labels = { visit: '到访', train: '铁路', flight: '航班' };
       html += `<button type="button" class="jc-date${events.length ? ' has-events' : ''}" data-date="${date}" aria-pressed="${date === selected}" aria-label="${displayYear}年${displayMonth}月${day}日${kinds.length ? '，' + kinds.map((kind) => labels[kind]).join('、') : '，暂无记录'}"><span>${day}</span><span class="jc-dots" aria-hidden="true">${kinds.map((kind) => `<i class="jc-dot ${kind}"></i>`).join('')}</span></button>`;
     }
     return { html, count };
@@ -57,6 +79,9 @@
     element('year').value = String(year);
     element('month').value = String(month);
     root.dataset.view = view;
+    if (view !== 'year') closeDetail();
+    element(view === 'year' ? 'modal-content' : 'detail-home').append(element('detail'));
+    element('detail-home').hidden = view === 'year';
     element('month-label').hidden = view === 'year';
     element('weekdays').hidden = view === 'year';
     root.querySelectorAll('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
@@ -105,6 +130,7 @@
 
   root.addEventListener('click', (event) => {
     if (!data) return;
+    if (event.target.closest('[data-action="close-modal"]')) { closeDetail(); return; }
     const viewButton = event.target.closest('button[data-view]');
     if (viewButton) { view = viewButton.dataset.view; render(); return; }
     const monthButton = event.target.closest('[data-month]');
@@ -112,7 +138,7 @@
     const dateButton = event.target.closest('[data-date]');
     if (dateButton) {
       select(dateButton.dataset.date);
-      if (view === 'year') element('detail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (view === 'year') openDetail();
       return;
     }
     const action = event.target.closest('[data-action]')?.dataset.action;

@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { exactDate, parseSummary, parseRailways, parseFlights, transportEvents, buildCalendar } = require('../lib/journey-calendar.cjs');
+const { exactDate, dateHeadingLinks, parseSummary, parseRailways, parseFlights, transportEvents, buildCalendar } = require('../lib/journey-calendar.cjs');
 const data = buildCalendar(path.resolve(__dirname, '..'));
 
 test('only exact valid dates are admitted', () => {
@@ -10,8 +10,9 @@ test('only exact valid dates are admitted', () => {
   for (const date of ['2024.2', '2025.2.29', '2026.13.1', '2016年元旦前后']) assert.equal(exactDate(date), null);
   assert.equal(parseRailways([{ properties: { date: '2026.11' } }]).length, 0);
   assert.equal(parseSummary('# 常驻城市\n## [北京](../1502/)\n- 2016年元旦前后\n  故宫').length, 0);
-  assert.equal(parseFlights('{% hideToggle 展开飞行记录表 %}\n|2026.1|北京|广州|CA1234|320|100|\n{% endhideToggle %}').length, 0);
-  assert.equal(parseFlights('{% hideToggle 展开飞行记录表 %}\n|2026.1.1|北京|广州|CA1234|320|100|\n||广州|北京|CA1235|320|100|\n{% endhideToggle %}').length, 1);
+  const header = '{% hideToggle 展开飞行记录表 %}\n|日期|出发地|目的地|航班号|机型|里程（km）|时间|\n';
+  assert.equal(parseFlights(header+'|2026.1|北京|广州|CA1234|320|100|08:00-10:00|\n{% endhideToggle %}').length, 0);
+  assert.equal(parseFlights(header+'|2026.1.1|北京|广州|CA1234|320|100|08:00-10:00|\n||广州|北京|CA1235|320|100|11:00-13:00|\n{% endhideToggle %}').length, 1);
 });
 
 test('same-prefecture travel is interleaved with visits at the actual stops', () => {
@@ -54,7 +55,7 @@ test('all precise flights are present and articles are unique per day', () => {
   }
   const day = data.days['2025-07-17'];
   assert.equal(day.events.filter((e) => e.type === 'visit').length, 1);
-  assert.ok(day.articles.some((a) => a.url === '/posts/1502/'));
+  assert.ok(day.articles.some((a) => a.url.startsWith('/posts/1502/#')));
   assert.ok(day.articles.some((a) => a.url === '/posts/3321/'));
 });
 
@@ -75,7 +76,9 @@ test('summary supports one-day headings, date ranges and the existing comma typo
 });
 
 const routes = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../Map/web/data/visited_routes.geojson'), 'utf8')).features;
-const reviewedRows = fs.readFileSync(path.resolve(__dirname, '../Map/制图工具/scripts/travel_history/railway_records.csv'), 'utf8').trim().split(/\r?\n/).slice(1).map((line) => line.split('|'));
+const articleText = fs.readFileSync(path.resolve(__dirname, '../source/_posts/行旅杂记.md'), 'utf8');
+const railwayBlock = articleText.match(/{% hideToggle 展开铁路记录表 %}([\s\S]*?){% endhideToggle %}/)[1];
+const reviewedRows = railwayBlock.split(/\r?\n/).filter((line) => /^\|\d/.test(line)).map((line, index) => [String(index + 1), ...line.slice(1, -1).split('|').map((cell) => cell.trim())]);
 const dayOrder = (date) => data.days[date].events.map((event) => event.type === 'visit' ? event.city : `${event.code}:${event.phase}`);
 
 test('all reviewed identities, dates, clocks, distances and notes reach the web', () => {
@@ -138,4 +141,73 @@ test('calendar has only travelogue links and current Beijing closure wording', (
   const march = data.days['2026-03-21'].events.find((e) => e.type === 'visit').details;
   assert.ok(march.includes('孙中山行馆（不开放）'));
   assert.ok(march.includes('孟小冬故居（不开放）'));
+});
+
+test('new travelogues with explicit cities are discovered without a code registry', () => {
+  const visits = parseSummary('# 2027年\n## [全新的游记](../new-trip/)\n- 3.8\n  厦门：鼓浪屿\n  泉州：开元寺');
+  assert.equal(visits.length, 2);
+  assert.deepEqual(visits.map((v) => [v.date, v.city, v.details]), [['2027-03-08', '厦门', '鼓浪屿'], ['2027-03-08', '泉州', '开元寺']]);
+  assert.equal(visits[0].articles[0].url, '/posts/new-trip/');
+});
+
+test('flight clocks are read from the time column and order flights with trains', () => {
+  const flights = parseFlights(articleText);
+  assert.equal(flights.length, 16);
+  assert.ok(flights.every((flight) => /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(flight.time)));
+  assert.equal(flights.find((flight) => flight.code.endsWith('MU5287')).time, '07:20-09:35');
+  assert.equal(data.days['2026-04-19'].events[0].type, 'flight');
+  assert.equal(data.days['2026-04-19'].events[0].time, '13:05-15:55');
+  assert.equal(data.days['2026-04-19'].events[1].code, 'C2726');
+});
+
+test('June 28 2022 direction is corrected in web and calendar', () => {
+  const route = routes.find((f) => f.properties.seq === 11).properties;
+  assert.equal(route.origin, '广州南');
+  assert.equal(route.destination, '湛江西');
+  assert.equal(data.days['2022-06-28'].events[0].origin, '广州南');
+});
+
+test('calendar retains the corrected county names and resets Qinhuangdao after Suizhong', () => {
+  const cases = [
+    ['2026-01-02', '孟姜女坟', '葫芦岛绥中县'],
+    ['2026-01-02', '山海关中国长城博物馆', '秦皇岛'],
+    ['2025-09-13', '吴敬梓', '滁州全椒县'],
+    ['2024-03-10', '西递村', '黄山黟县'],
+    ['2024-07-29', '吉利汽车研究院', '宁波慈溪市'],
+    ['2024-09-16', '杜甫故里', '郑州巩义市'],
+  ];
+  for (const [date, place, city] of cases) {
+    assert.equal(data.days[date].events.find((event) => event.details?.includes(place))?.city, city, place);
+  }
+});
+
+test('dated travelogue links keep the title and target the matching date section', () => {
+  for (const [date, post, anchor, title] of [
+    ['2025-11-30', '1502', '11-30（周日）', '北京行迹'],
+    ['2025-11-15', '1502', '11-15至11-16（周末）', '北京行迹'],
+    ['2025-11-16', '1502', '11-15至11-16（周末）', '北京行迹'],
+    ['2025-07-17', '1502', '夏令营期间', '北京行迹'],
+    ['2026-08-29', '1502', '8-29（周六）', '北京行迹'],
+    ['2025-01-20', '8478', '2025年1月20日', '大城小事1：广州'],
+    ['2026-08-09', '8478', '2026年8月8日-9日', '大城小事1：广州'],
+    ['2026-02-27', 'a78e', '2026年2月27日-28日', '大城小事2：深圳（兼记东莞）'],
+  ]) {
+    const article = data.days[date].articles.find((a) => a.url.startsWith(`/posts/${post}/`));
+    assert.equal(article?.url, `/posts/${post}/#${encodeURIComponent(anchor)}`);
+    assert.equal(article.title, title);
+  }
+});
+
+test('date sections respect year context, duplicate ids and fenced examples', () => {
+  const links = dateHeadingLinks('## 2025年\n### 1.2\n### 1.3至1.4\n## 2026年\n### 1.2\n```md\n### 1.5\n```\n');
+  assert.equal(links.get('2025-01-02'), '1-2');
+  assert.equal(links.get('2025-01-04'), '1-3至1-4');
+  assert.equal(links.get('2026-01-02'), '1-2-1');
+  assert.equal(links.has('2026-01-05'), false);
+});
+
+test('removed transfer notes stay absent from the calendar', () => {
+  for (const [date, code] of [['2025-06-23', 'K8363'], ['2024-09-17', 'G1885']]) {
+    assert.equal(data.days[date].events.find((event) => event.code === code).note, '');
+  }
 });

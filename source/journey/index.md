@@ -4,7 +4,7 @@ title: Journey
 
 {% journey_calendar %}
 
-- [行旅杂记](../posts/9e84/)（7.9k）
+- [行旅杂记](../posts/9e84/)（8.6k）
 - [行程轨迹汇总](../posts/dbd5/)
 
 - 常驻城市

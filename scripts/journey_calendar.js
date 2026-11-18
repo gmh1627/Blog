@@ -1,10 +1,10 @@
 'use strict';
 
 const { calendarMarkup } = require('../lib/journey-calendar-view.cjs');
-const { calendarForBuild } = require('../lib/journey-calendar.cjs');
+const { buildCalendar } = require('../lib/journey-calendar.cjs');
 
 hexo.extend.generator.register('journey-calendar-data', function () {
-  return { path: 'journey/calendar.json', data: calendarForBuild(hexo.base_dir, hexo.config.marked, process.env.BLOG_JOURNEY_CALENDAR_CACHE) };
+  return { path: 'journey/calendar.json', data: JSON.stringify(buildCalendar(hexo.base_dir, hexo.config.marked)) };
 });
 
 hexo.extend.tag.register('journey_calendar', () => calendarMarkup());

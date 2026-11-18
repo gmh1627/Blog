@@ -10,7 +10,7 @@
     "heritage:links": "node \"./heritage/scripts/verify_encyclopedia_links.mjs\"",
     "predeploy:all": "node \"./heritage/scripts/prepare_publish.mjs\"",
     "map:update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".\\Map\\制图工具\\update_travel_history.ps1\" -SkipBlogBuild",
-    "deploy:all": "npm run map:update && hexo clean && hexo generate && hexo deploy && python 统计/blog_stat.py && hexo clean && hexo generate && hexo deploy && git add . && git commit -m \"commit\" && git push origin main",
+    "deploy:all": "node \"./lib/deploy-all.cjs\"",
     "server": "hexo server"
   },
   "hexo": {

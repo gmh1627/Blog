@@ -1038,11 +1038,14 @@ css_prefix: true
 # Insert the code to head (before '</head>' tag) and the bottom (before '</body>' tag)
 inject:
   head:
+    - <link rel="stylesheet" href="/css/journey-calendar.css?v=20261118-5">
+    - <link rel="stylesheet" href="/css/site-layout.css?v=20261118-5">
     # - <link rel="stylesheet" href="/xxx.css">
     # - <link rel="stylesheet" href="/css/custom.css">
     # 为访客地图小组件设置一个最小高度
     #- '<style>#user-map .item-content { min-height: 170px; }</style>'
   bottom:
+    - <script defer src="/js/journey-calendar.js?v=20261118-5"></script>
     # - <script src="xxxx"></script>
 
 # CDN Settings

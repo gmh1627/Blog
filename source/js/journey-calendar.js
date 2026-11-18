@@ -1,180 +1,211 @@
 (() => {
   'use strict';
-  const root = document.getElementById('journey-calendar');
-  if (!root || root.dataset.initialized) return;
-  root.dataset.initialized = 'true';
-  const element = (role) => root.querySelector(`[data-role="${role}"]`);
-  const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
-  const iso = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-  let data;
-  let selected;
-  let year;
-  let month;
-  let firstYear;
-  let lastYear;
-  let view = 'month';
-  const modal = element('modal');
-  let previousOverflow = '';
-
-  function openDetail() {
-    if (modal.open) return;
-    previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    modal.showModal();
+  const requests = new Map();
+  function loadCalendar(url) {
+    if (!requests.has(url)) requests.set(url, fetch(url, { cache: 'no-cache' }).then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }));
+    return requests.get(url);
   }
 
-  function closeDetail() {
-    if (modal.open) modal.close();
-  }
+  function initialize(root) {
+    if (root.dataset.initialized) return;
+    root.dataset.initialized = 'true';
+    const compact = root.dataset.compact === 'true';
+    const element = (role) => root.querySelector(`[data-role="${role}"]`);
+    const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+    const iso = (year, month, day) => `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    let data;
+    let selected;
+    let year;
+    let month;
+    let firstYear;
+    let lastYear;
+    let view = 'month';
+    const modal = element('modal');
+    let previousOverflow = '';
 
-  modal.addEventListener('close', () => {
-    document.body.style.overflow = previousOverflow;
-    root.querySelector(`[data-date="${selected}"]`)?.focus({ preventScroll: true });
-  });
-  modal.addEventListener('click', (event) => {
-    const box = modal.getBoundingClientRect();
-    if (event.target === modal && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDetail();
-  });
-
-  function renderDetail() {
-    const record = data.days[selected];
-    const date = new Date(`${selected}T00:00:00+08:00`);
-    const weekday = new Intl.DateTimeFormat('zh-CN', { weekday: 'long', timeZone: 'Asia/Shanghai' }).format(date);
-    const title = `<div class="jc-day-heading"><span id="jc-selected-date">${selected.replaceAll('-', '.')}</span><span>${weekday}</span></div>`;
-    if (!record) {
-      element('detail').innerHTML = `${title}<div class="jc-empty">这一天还没有记录。<p>选一个带圆点的日期，查看行程和交通。</p></div>`;
-      return;
+    function openDetail() {
+      if (modal.open) return;
+      if (compact) {
+        const position = { left: window.scrollX, top: window.scrollY, behavior: 'instant' };
+        modal.show();
+        window.scrollTo(position);
+        modal.scrollTop = 0;
+        return;
+      }
+      previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      modal.showModal();
+      modal.scrollTop = 0;
     }
-    const links = record.articles.map((article) => `<a href="${escape(article.url)}">${escape(article.title)} ↗</a>`).join('');
-    const events = record.events.map((event) => {
-      if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">到访</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${event.city ? `<strong class="jc-visit-city">${escape(event.city)}${event.details ? '：' : ''}</strong>` : ''}${escape(event.details)}</p></li>`;
-      const kind = event.type === 'train' ? '铁路' : '航班';
-      const phase = event.phase === 'arrival' ? '抵达' : event.arrivalDate > event.date ? '出发 · 跨夜' : '';
-      let time = event.time;
-      const clocks = [...event.time.matchAll(/\d{1,2}:\d{2}/g)].map((match) => match[0]);
-      if (event.phase === 'arrival') time = `${event.clock} 抵达 · ${event.departureDate.replaceAll('-', '.')} ${clocks[0] || ''} 出发`;
-      else if (event.arrivalDate > event.date) time = `${event.clock} 出发 · ${event.arrivalDate.replaceAll('-', '.')} ${clocks.at(-1) || ''} 抵达`;
-      return `<li class="jc-event ${event.type}"><span class="jc-event-kind">${kind}${phase ? ` · ${phase}` : ''}</span><strong>${escape(event.origin)} <span aria-label="到">→</span> ${escape(event.destination)}</strong><p class="jc-transport-meta">${escape(event.code)} · ${event.distance.toLocaleString('zh-CN')} km${time ? `<br>${escape(time)}` : ''}${event.note ? `<br>${escape(event.note)}` : ''}</p></li>`;
-    }).join('');
-    element('detail').innerHTML = `${title}${links ? `<div class="jc-article-links" aria-label="当天的游记">${links}</div>` : ''}<ol class="jc-timeline">${events}</ol>`;
-  }
 
-  function monthGrid(displayYear, displayMonth) {
-    const start = (new Date(Date.UTC(displayYear, displayMonth - 1, 1)).getUTCDay() + 6) % 7;
-    const length = new Date(Date.UTC(displayYear, displayMonth, 0)).getUTCDate();
-    let html = '<span class="jc-blank" aria-hidden="true"></span>'.repeat(start);
-    let count = 0;
-    for (let day = 1; day <= length; day++) {
-      const date = iso(displayYear, displayMonth, day);
-      const events = data.days[date]?.events || [];
-      if (events.length) count++;
-      const kinds = [...new Set(events.map((event) => event.type))];
-      const labels = { visit: '到访', train: '铁路', flight: '航班' };
-      html += `<button type="button" class="jc-date${events.length ? ' has-events' : ''}" data-date="${date}" aria-pressed="${date === selected}" aria-label="${displayYear}年${displayMonth}月${day}日${kinds.length ? '，' + kinds.map((kind) => labels[kind]).join('、') : '，暂无记录'}"><span>${day}</span><span class="jc-dots" aria-hidden="true">${kinds.map((kind) => `<i class="jc-dot ${kind}"></i>`).join('')}</span></button>`;
+    function closeDetail() {
+      if (modal.open) modal.close();
     }
-    return { html, count };
-  }
 
-  function render() {
-    element('year').value = String(year);
-    element('month').value = String(month);
-    root.dataset.view = view;
-    if (view !== 'year') closeDetail();
-    element(view === 'year' ? 'modal-content' : 'detail-home').append(element('detail'));
-    element('detail-home').hidden = view === 'year';
-    element('month-label').hidden = view === 'year';
-    element('weekdays').hidden = view === 'year';
-    root.querySelectorAll('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
-    element('grid').className = view === 'year' ? 'jc-year-grid' : 'jc-grid';
-    if (view === 'year') {
-      let count = 0;
-      element('grid').innerHTML = Array.from({ length: 12 }, (_, index) => {
-        const grid = monthGrid(year, index + 1);
-        count += grid.count;
-        return `<section class="jc-year-month" aria-label="${year}年${index + 1}月"><button type="button" class="jc-year-month-title" data-month="${index + 1}" aria-label="查看${year}年${index + 1}月月视图">${index + 1} 月 <span>↗</span></button><div class="jc-weekdays" aria-hidden="true">${['一','二','三','四','五','六','日'].map((day) => `<span>${day}</span>`).join('')}</div><div class="jc-grid">${grid.html}</div></section>`;
+    modal.addEventListener('close', () => {
+      if (!compact) document.body.style.overflow = previousOverflow;
+      root.querySelector(`[data-date="${selected}"]`)?.focus({ preventScroll: true });
+    });
+    modal.addEventListener('keydown', (event) => {
+      if (compact && event.key === 'Escape') {
+        event.preventDefault();
+        closeDetail();
+      }
+    });
+    modal.addEventListener('click', (event) => {
+      const box = modal.getBoundingClientRect();
+      if (event.target === modal && (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom)) closeDetail();
+    });
+
+    function renderDetail() {
+      const record = data.days[selected];
+      const date = new Date(`${selected}T00:00:00+08:00`);
+      const weekday = new Intl.DateTimeFormat('zh-CN', { weekday: 'long', timeZone: 'Asia/Shanghai' }).format(date);
+      const title = `<div class="jc-day-heading"><span id="${root.id}-selected-date">${selected.replaceAll('-', '.')}</span><span>${weekday}</span></div>`;
+      if (!record) {
+        element('detail').innerHTML = `${title}<div class="jc-empty">这一天还没有记录。<p>选一个带圆点的日期，查看行程和交通。</p></div>`;
+        return;
+      }
+      const links = record.articles.map((article) => `<a href="${escape(article.url)}">${escape(article.title)} ↗</a>`).join('');
+      const events = record.events.map((event) => {
+        if (event.type === 'visit') return `<li class="jc-event visit"><span class="jc-event-kind">到访</span>${event.range ? `<small>${escape(event.range)}</small>` : ''}<p>${event.city ? `<strong class="jc-visit-city">${escape(event.city)}${event.details ? '：' : ''}</strong>` : ''}${escape(event.details)}</p></li>`;
+        const kind = event.type === 'train' ? '铁路' : '航班';
+        const phase = event.phase === 'arrival' ? '抵达' : event.arrivalDate > event.date ? '出发 · 跨夜' : '';
+        let time = event.time;
+        const clocks = [...event.time.matchAll(/\d{1,2}:\d{2}/g)].map((match) => match[0]);
+        if (event.phase === 'arrival') time = `${event.clock} 抵达 · ${event.departureDate.replaceAll('-', '.')} ${clocks[0] || ''} 出发`;
+        else if (event.arrivalDate > event.date) time = `${event.clock} 出发 · ${event.arrivalDate.replaceAll('-', '.')} ${clocks.at(-1) || ''} 抵达`;
+        return `<li class="jc-event ${event.type}"><span class="jc-event-kind">${kind}${phase ? ` · ${phase}` : ''}</span><strong>${escape(event.origin)} <span aria-label="到">→</span> ${escape(event.destination)}</strong><p class="jc-transport-meta">${escape(event.code)} · ${event.distance.toLocaleString('zh-CN')} km${time ? `<br>${escape(time)}` : ''}${event.note ? `<br>${escape(event.note)}` : ''}</p></li>`;
       }).join('');
-      element('month-summary').textContent = `${year} 年 · ${count} 天有记录`;
-    } else {
-      const grid = monthGrid(year, month);
-      element('grid').innerHTML = grid.html;
-      element('month-summary').textContent = `本月 ${grid.count} 天有记录`;
+      element('detail').innerHTML = `${title}${links ? `<div class="jc-article-links" aria-label="当天的游记">${links}</div>` : ''}<ol class="jc-timeline">${events}</ol>`;
     }
-    const previous = root.querySelector('[data-action="previous"]');
-    const next = root.querySelector('[data-action="next"]');
-    previous.disabled = year === firstYear && (view === 'year' || month === 1);
-    next.disabled = year === lastYear && (view === 'year' || month === 12);
-    previous.setAttribute('aria-label', view === 'year' ? '上一年' : '上个月');
-    next.setAttribute('aria-label', view === 'year' ? '下一年' : '下个月');
-    renderDetail();
-  }
 
-  function select(date, updateHash = true) {
-    selected = date;
-    [year, month] = date.split('-').map(Number);
-    render();
-    if (updateHash) history.replaceState(null, '', `#journey-${date}`);
-  }
-
-  function changeMonth(nextYear, nextMonth) {
-    if (nextMonth < 1) { nextYear--; nextMonth = 12; }
-    if (nextMonth > 12) { nextYear++; nextMonth = 1; }
-    if (nextYear < firstYear || nextYear > lastYear) return;
-    const prefix = iso(nextYear, nextMonth, 1).slice(0, 7);
-    select(Object.keys(data.days).find((date) => date.startsWith(prefix)) || `${prefix}-01`);
-  }
-
-  function changeYear(nextYear) {
-    if (nextYear < firstYear || nextYear > lastYear) return;
-    select(Object.keys(data.days).find((date) => date.startsWith(`${nextYear}-`)) || `${nextYear}-01-01`);
-  }
-
-  root.addEventListener('click', (event) => {
-    if (!data) return;
-    if (event.target.closest('[data-action="close-modal"]')) { closeDetail(); return; }
-    const viewButton = event.target.closest('button[data-view]');
-    if (viewButton) { view = viewButton.dataset.view; render(); return; }
-    const monthButton = event.target.closest('[data-month]');
-    if (monthButton) { view = 'month'; changeMonth(year, Number(monthButton.dataset.month)); return; }
-    const dateButton = event.target.closest('[data-date]');
-    if (dateButton) {
-      select(dateButton.dataset.date);
-      if (view === 'year') openDetail();
-      return;
+    function monthGrid(displayYear, displayMonth) {
+      const start = (new Date(Date.UTC(displayYear, displayMonth - 1, 1)).getUTCDay() + 6) % 7;
+      const length = new Date(Date.UTC(displayYear, displayMonth, 0)).getUTCDate();
+      let html = '<span class="jc-blank" aria-hidden="true"></span>'.repeat(start);
+      let count = 0;
+      for (let day = 1; day <= length; day++) {
+        const date = iso(displayYear, displayMonth, day);
+        const events = data.days[date]?.events || [];
+        if (events.length) count++;
+        const kinds = [...new Set(events.map((event) => event.type))];
+        const labels = { visit: '到访', train: '铁路', flight: '航班' };
+        html += `<button type="button" class="jc-date${events.length ? ' has-events' : ''}" data-date="${date}" aria-pressed="${date === selected}" aria-label="${displayYear}年${displayMonth}月${day}日${kinds.length ? '，' + kinds.map((kind) => labels[kind]).join('、') : '，暂无记录'}"><span>${day}</span><span class="jc-dots" aria-hidden="true">${kinds.map((kind) => `<i class="jc-dot ${kind}"></i>`).join('')}</span></button>`;
+      }
+      return { html, count };
     }
-    const action = event.target.closest('[data-action]')?.dataset.action;
-    if (action === 'previous') view === 'year' ? changeYear(year - 1) : changeMonth(year, month - 1);
-    if (action === 'next') view === 'year' ? changeYear(year + 1) : changeMonth(year, month + 1);
-    if (action === 'latest') select(Object.keys(data.days).at(-1));
-  });
-  element('year').addEventListener('change', () => view === 'year' ? changeYear(Number(element('year').value)) : changeMonth(Number(element('year').value), month));
-  element('month').addEventListener('change', () => changeMonth(year, Number(element('month').value)));
-  element('grid').addEventListener('keydown', (event) => {
-    const button = event.target.closest('[data-date]');
-    const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
-    if (!button || !offset) return;
-    event.preventDefault();
-    const date = new Date(`${button.dataset.date}T00:00:00Z`);
-    date.setUTCDate(date.getUTCDate() + offset);
-    if (date.getUTCFullYear() < firstYear || date.getUTCFullYear() > lastYear) return;
-    select(date.toISOString().slice(0, 10));
-    root.querySelector(`[data-date="${selected}"]`).focus();
-  });
 
-  fetch(root.dataset.calendarUrl, { cache: 'no-cache' }).then((response) => {
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    return response.json();
-  }).then((payload) => {
-    data = payload;
-    const dates = Object.keys(data.days);
-    if (!dates.length) { element('detail').textContent = '暂时没有带具体日期的行程。'; return; }
-    firstYear = Number(dates[0].slice(0, 4));
-    lastYear = Number(dates.at(-1).slice(0, 4));
-    element('year').innerHTML = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => `<option>${firstYear + index}</option>`).join('');
-    element('month').innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index + 1}">${index + 1} 月</option>`).join('');
-    const hash = location.hash.match(/^#journey-(\d{4}-\d{2}-\d{2})$/)?.[1];
-    select(hash && data.days[hash] ? hash : dates.at(-1), false);
-  }).catch((error) => {
-    element('detail').textContent = '行程暂时无法读取，请刷新页面重试。';
-    console.error('旅行日历', error);
-  });
+    function render() {
+      element('year').value = String(year);
+      element('month').value = String(month);
+      root.dataset.view = view;
+      if (view !== 'year' && !compact) closeDetail();
+      element(view === 'year' || compact ? 'modal-content' : 'detail-home').append(element('detail'));
+      element('detail-home').hidden = view === 'year' || compact;
+      if (compact) root.querySelector('.jc-heading a').href = `/journey/#journey-${selected}`;
+      element('month-label').hidden = view === 'year';
+      element('weekdays').hidden = view === 'year';
+      root.querySelectorAll('[data-view]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.view === view)));
+      element('grid').className = view === 'year' ? 'jc-year-grid' : 'jc-grid';
+      if (view === 'year') {
+        let count = 0;
+        element('grid').innerHTML = Array.from({ length: 12 }, (_, index) => {
+          const grid = monthGrid(year, index + 1);
+          count += grid.count;
+          return `<section class="jc-year-month" aria-label="${year}年${index + 1}月"><button type="button" class="jc-year-month-title" data-month="${index + 1}" aria-label="查看${year}年${index + 1}月月视图">${index + 1} 月 <span>↗</span></button><div class="jc-weekdays" aria-hidden="true">${['一','二','三','四','五','六','日'].map((day) => `<span>${day}</span>`).join('')}</div><div class="jc-grid">${grid.html}</div></section>`;
+        }).join('');
+        element('month-summary').textContent = `${year} 年 · ${count} 天有记录`;
+      } else {
+        const grid = monthGrid(year, month);
+        element('grid').innerHTML = grid.html;
+        element('month-summary').textContent = `本月 ${grid.count} 天有记录`;
+      }
+      const previous = root.querySelector('[data-action="previous"]');
+      const next = root.querySelector('[data-action="next"]');
+      previous.disabled = year === firstYear && (view === 'year' || month === 1);
+      next.disabled = year === lastYear && (view === 'year' || month === 12);
+      previous.setAttribute('aria-label', view === 'year' ? '上一年' : '上个月');
+      next.setAttribute('aria-label', view === 'year' ? '下一年' : '下个月');
+      renderDetail();
+    }
+
+    function select(date, updateHash = true) {
+      selected = date;
+      [year, month] = date.split('-').map(Number);
+      render();
+      if (modal.open) modal.scrollTop = 0;
+      if (updateHash && !compact) history.replaceState(null, '', `#journey-${date}`);
+    }
+
+    function changeMonth(nextYear, nextMonth) {
+      if (nextMonth < 1) { nextYear--; nextMonth = 12; }
+      if (nextMonth > 12) { nextYear++; nextMonth = 1; }
+      if (nextYear < firstYear || nextYear > lastYear) return;
+      const prefix = iso(nextYear, nextMonth, 1).slice(0, 7);
+      select(Object.keys(data.days).find((date) => date.startsWith(prefix)) || `${prefix}-01`);
+    }
+
+    function changeYear(nextYear) {
+      if (nextYear < firstYear || nextYear > lastYear) return;
+      select(Object.keys(data.days).find((date) => date.startsWith(`${nextYear}-`)) || `${nextYear}-01-01`);
+    }
+
+    root.addEventListener('click', (event) => {
+      if (!data) return;
+      if (event.target.closest('[data-action="close-modal"]')) { closeDetail(); return; }
+      const viewButton = event.target.closest('button[data-view]');
+      if (viewButton) { view = viewButton.dataset.view; render(); return; }
+      const monthButton = event.target.closest('[data-month]');
+      if (monthButton) { view = 'month'; changeMonth(year, Number(monthButton.dataset.month)); return; }
+      const dateButton = event.target.closest('[data-date]');
+      if (dateButton) {
+        select(dateButton.dataset.date);
+        if (view === 'year' || compact) openDetail();
+        return;
+      }
+      const action = event.target.closest('[data-action]')?.dataset.action;
+      if (action === 'previous') view === 'year' ? changeYear(year - 1) : changeMonth(year, month - 1);
+      if (action === 'next') view === 'year' ? changeYear(year + 1) : changeMonth(year, month + 1);
+      if (action === 'latest') {
+        select(Object.keys(data.days).at(-1));
+        if (compact) openDetail();
+      }
+    });
+    element('year').addEventListener('change', () => view === 'year' ? changeYear(Number(element('year').value)) : changeMonth(Number(element('year').value), month));
+    element('month').addEventListener('change', () => changeMonth(year, Number(element('month').value)));
+    element('grid').addEventListener('keydown', (event) => {
+      const button = event.target.closest('[data-date]');
+      const offset = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 }[event.key];
+      if (!button || !offset) return;
+      event.preventDefault();
+      const date = new Date(`${button.dataset.date}T00:00:00Z`);
+      date.setUTCDate(date.getUTCDate() + offset);
+      if (date.getUTCFullYear() < firstYear || date.getUTCFullYear() > lastYear) return;
+      select(date.toISOString().slice(0, 10));
+      root.querySelector(`[data-date="${selected}"]`).focus();
+    });
+
+    loadCalendar(root.dataset.calendarUrl).then((payload) => {
+      data = payload;
+      const dates = Object.keys(data.days);
+      if (!dates.length) { element('detail').textContent = '暂时没有带具体日期的行程。'; return; }
+      firstYear = Number(dates[0].slice(0, 4));
+      lastYear = Number(dates.at(-1).slice(0, 4));
+      element('year').innerHTML = Array.from({ length: lastYear - firstYear + 1 }, (_, index) => `<option>${firstYear + index}</option>`).join('');
+      element('month').innerHTML = Array.from({ length: 12 }, (_, index) => `<option value="${index + 1}">${index + 1} 月</option>`).join('');
+      const hash = !compact && location.hash.match(/^#journey-(\d{4}-\d{2}-\d{2})$/)?.[1];
+      select(hash && data.days[hash] ? hash : dates.at(-1), false);
+    }).catch((error) => {
+      element('detail').textContent = '行程暂时无法读取，请刷新页面重试。';
+      console.error('旅行日历', error);
+    });
+  }
+
+  const initializeAll = () => document.querySelectorAll('[data-journey-calendar]').forEach(initialize);
+  initializeAll();
+  document.addEventListener('pjax:complete', initializeAll);
 })();

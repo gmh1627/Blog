@@ -56,5 +56,4 @@ hexo.extend.filter.register('after_generate', async function () {
         )
       ),
   ]);
-  hexo.log.info('[铁路地图] 已发布到 /map/');
 });

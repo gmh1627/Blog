@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { exactDate, dateHeadingLinks, parseSummary, parseRailways, parseFlights, transportEvents, buildCalendar } = require('../lib/journey-calendar.cjs');
+const { exactDate, dateHeadingLinks, parseSummary, parseRailways, parseRailwayTable, parseFlights, transportEvents, buildCalendar } = require('../lib/journey-calendar.cjs');
 const data = buildCalendar(path.resolve(__dirname, '..'));
 
 test('only exact valid dates are admitted', () => {
@@ -210,4 +210,16 @@ test('removed transfer notes stay absent from the calendar', () => {
   for (const [date, code] of [['2025-06-23', 'K8363'], ['2024-09-17', 'G1885']]) {
     assert.equal(data.days[date].events.find((event) => event.code === code).note, '');
   }
+});
+
+test('article railway dates and clocks override stale map data and admit new routes', () => {
+  const text = '{% hideToggle 展开铁路记录表 %}\n|日期|出发地|目的地|车次|里程（km）|时间|备注|\n|---|---|---|---|---|---|---|\n'
+    + '|2027.1.2|合肥南|北京南|G1|1000|09:00-13:00|新备注|\n'
+    + '|2027.1.3|北京南|厦门北|G2|2000|08:00-20:00||\n'
+    + '|2027.1|厦门北|北京南|G3|2000|08:00-20:00||\n{% endhideToggle %}';
+  const records = parseRailwayTable(text, [{ properties: { date: '2026.1.1', origin: '合肥南', destination: '北京南', train: 'G1', time: '00:00-01:00', origin_city: '合肥', destination_city: '北京' } }]);
+  assert.equal(records.length, 2);
+  assert.deepEqual([records[0].date, records[0].time, records[0].note], ['2027-01-02', '09:00-13:00', '新备注']);
+  assert.deepEqual([records[1].originCity, records[1].destinationCity], ['北京', '厦门']);
+  assert.throws(() => parseRailwayTable(text.replace('|09:00-13:00|新备注|', '|09:00-13:00|')), /column count/);
 });

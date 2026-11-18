@@ -1,0 +1,73 @@
+/* Main cards stay raised; sidebar cards have a quiet outline and tighter gaps. */
+:root { --card-box-shadow: 0 4px 16px #07111b1a; --card-hover-box-shadow: 0 6px 22px #07111b24; }
+.layout > div:first-child:not(.nc) { padding: 38px 32px; }
+#aside-content .card-widget { padding: 14px 16px; margin-bottom: 10px; background: var(--card-bg); border: 1px solid var(--jc-sidebar-line, #e9edef); border-radius: 10px; box-shadow: 0 1px 5px #07111b05; }
+#aside-content .card-widget:hover { box-shadow: 0 1px 5px #07111b05; }
+[data-theme="dark"] #aside-content { --jc-sidebar-line: #292d30; }
+#aside-content .sticky_layout > .card-widget:last-child { margin-bottom: 0; }
+#aside-content .item-headline { padding-bottom: 6px; font-size: 16px; font-weight: 600; }
+#aside-content .item-headline > i { font-size: 14px; color: var(--card-meta); }
+#aside-content .aside-list > .aside-list-item { border-bottom: 0; padding-block: 7px; }
+#aside-content .card-info .avatar-img { width: 96px; height: 96px; }
+#recent-posts .recent-post-item:not(:has(.post_cover)) { height: auto; min-height: 156px; }
+#recent-posts .recent-post-item:not(:has(.post_cover)) > .recent-post-info { width: 100%; padding: 30px 32px; }
+
+@media (min-width: 901px) {
+  #aside-content { padding-left: 24px; }
+
+  /* Pagination gets a separate row; the sidebar ends with the article cards. */
+  #content-inner:has(> #recent-posts:not(.masonry)) { display: grid; grid-template-columns: minmax(0, 74fr) minmax(0, 26fr); grid-template-rows: auto auto; }
+  #content-inner > #recent-posts:not(.masonry) { display: contents; }
+  #recent-posts:not(.masonry) > .recent-post-items { grid-column: 1; grid-row: 1; min-width: 0; }
+  #recent-posts:not(.masonry) > #pagination { grid-column: 1; grid-row: 2; }
+  #content-inner:has(> #recent-posts:not(.masonry)) > #aside-content { grid-column: 2; grid-row: 1; width: 100%; }
+  #recent-posts:not(.masonry) .recent-post-item:last-child { margin-bottom: 0; }
+  html.hide-aside #content-inner:has(> #recent-posts), #content-inner.hide-aside:has(> #recent-posts) { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Keep month details as tall as the month grid, with their own scrollbar. */
+@media (min-width: 701px) {
+  #journey-calendar[data-view="month"] [data-role="detail-home"] { position: relative; align-self: stretch; min-width: 0; }
+  #journey-calendar[data-view="month"] [data-role="detail-home"] .jc-detail { position: absolute; inset: 0; max-height: none; overflow: auto; overscroll-behavior: contain; padding-right: 8px; }
+}
+
+/* Sidebar details float in the middle, leaving the calendar visible around them. */
+#journey-calendar-aside { position: relative; margin: 0; padding: 0; border: 0; border-radius: 0; background: transparent; }
+#journey-calendar-aside .jc-month-panel { padding: 0; border: 0; background: transparent; }
+#journey-calendar-aside .jc-layout { display: block; }
+#journey-calendar-aside .jc-heading { gap: 8px; margin-bottom: 12px; }
+#journey-calendar-aside h2 { font-size: 17px; font-weight: 600; letter-spacing: .03em; }
+#journey-calendar-aside .jc-heading > a { font-size: 11px; }
+#journey-calendar-aside .jc-controls { margin-bottom: 8px; }
+#journey-calendar-aside .jc-controls select { font-size: 13px; background: transparent; }
+#journey-calendar-aside .jc-controls button { width: 28px; height: 28px; font-size: 22px; }
+#journey-calendar-aside .jc-date { min-height: 33px; font-size: 12px; }
+#journey-calendar-aside .jc-grid { gap: 2px; }
+#journey-calendar-aside .jc-weekdays { font-size: 10px; margin-bottom: 6px; }
+#journey-calendar-aside .jc-dot { width: 4px; height: 4px; }
+#journey-calendar-aside .jc-dots { min-height: 6px; gap: 2px; }
+#journey-calendar-aside .jc-key { margin-top: 8px; font-size: 10px; gap: 12px; }
+#journey-calendar-aside .jc-month-foot { margin-top: 8px; padding-top: 0; font-size: 10px; }
+#journey-calendar-aside .jc-month-foot button { font-size: 10px; }
+#journey-calendar-aside .jc-modal .jc-dot { width: 7px; height: 7px; }
+#journey-calendar-aside .jc-modal { position: absolute; inset: auto; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; width: calc(100% - 12px); height: auto; max-width: none; max-height: calc(100% - 80px); margin: 0; border: 1px solid var(--jc-line); border-radius: 12px; box-shadow: 0 8px 26px #162f232b; background: var(--card-bg); overscroll-behavior: contain; }
+#journey-calendar-aside .jc-modal .jc-detail { max-height: none; padding: 18px 12px 14px; overflow: visible; }
+#journey-calendar-aside .jc-modal .jc-day-heading { display: block; padding-right: 30px; font-size: 17px; }
+#journey-calendar-aside .jc-modal .jc-day-heading > span:last-child { display: block; margin-top: 1px; }
+#journey-calendar-aside .jc-modal .jc-article-links { margin: 10px 0 16px; font-size: 14px; }
+#journey-calendar-aside .jc-modal .jc-event { padding-left: 12px; padding-bottom: 16px; }
+#journey-calendar-aside .jc-modal .jc-event p { font-size: 12px; }
+#journey-calendar-aside .jc-modal .jc-modal-close { top: 3px; margin: 3px 3px -35px auto; background: var(--card-bg); }
+
+@media (max-width: 900px) {
+  .layout > div:first-child:not(.nc) { padding: 30px 18px; }
+  #recent-posts .recent-post-item:not(:has(.post_cover)) { min-height: 140px; }
+  #recent-posts .recent-post-item:not(:has(.post_cover)) > .recent-post-info { padding: 26px 22px; }
+  #journey-calendar-aside { max-width: 340px; margin-inline: auto; }
+  #aside-content #card-toc { background: var(--card-bg); border-radius: 10px; box-shadow: var(--card-box-shadow); }
+}
+
+@media (min-width: 901px) and (max-width: 1100px) {
+  #aside-content { padding-left: 18px; }
+  #aside-content .card-widget { padding: 12px 10px; }
+}
